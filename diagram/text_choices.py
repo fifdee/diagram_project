@@ -1,41 +1,39 @@
-from django.db import models
+ranks = (
+    ('szer.', 'szer.'),
+    ('st. szer.', 'st. szer.'),
+    ('st. szer. spec.', 'st. szer. spec.'),
+    ('kpr.', 'kpr.'),
+    ('st. kpr.', 'st. kpr'),
+    ('plut.', 'plut.'),
+    ('sierż.', 'sierż.'),
+    ('st. sierż.', 'st. sierż.'),
+    ('mł. chor.', 'mł. chor.'),
+    ('chor.', 'chor.'),
+    ('st. chor.', 'st. chor.'),
+    ('st. chor. sztab.', 'st. chor. sztab.'),
+    ('ppor.', 'ppor.'),
+    ('por.', 'por.'),
+    ('kpt.', 'kpt.'),
+    ('mjr', 'mjr'),
+    ('ppłk', 'ppłk'),
+    ('płk', 'płk'),
+    ('gen. bryg.', 'gen. bryg.'),
+)
 
-
-class Ranks(models.TextChoices):
-    U0 = 'szer.', 'szer.'
-    U1 = 'st. szer.', 'st. szer.'
-    U1A = 'st. szer. spec.', 'st. szer. spec.'
-    U2 = 'kpr.', 'kpr.'
-    U3 = 'st. kpr.', 'st. kpr'
-    U4 = 'plut.', 'plut.'
-    U5 = 'sierż.', 'sierż.'
-    U6 = 'st. sierż.', 'st. sierż.'
-    U7 = 'mł. chor.', 'mł. chor.'
-    U8 = 'chor.', 'chor.'
-    U9 = 'st. chor.', 'st. chor.'
-    U10 = 'st. chor. sztab.', 'st. chor. sztab.'
-    U11 = 'ppor.', 'ppor.'
-    U12 = 'por.', 'por.'
-    U13 = 'kpt.', 'kpt.'
-    U14 = 'mjr', 'mjr'
-    U15 = 'ppłk', 'ppłk'
-    U16 = 'płk', 'płk'
-    U17 = 'gen. bryg.', 'gen. bryg.'
-
-
-class ActivityNames(models.TextChoices):
-    SLUZBA_OFICERA = 'służba oficera', 'służba oficera'
-    SLUZBA_POMOCNIKA = 'służba pomocnika', 'służba pomocnika'
-    SLUZBA_PODOFICERA = 'służba podoficera', 'służba podoficera'
-    SLUZBA_DYZURNEGO = 'służba dyżurnego', 'służba dyżurnego'
-    SLUZBA_PST = 'służba PST', 'służba PST'
-    SLUZBA_PKT = 'służba PKT', 'służba PKT'
-    SLUZBA_PA_GARNIZONU = 'służba PA garnizonu', 'służba PA garnizonu'
-    SLUZBA_PA_JW = 'służba PA JW', 'służba PA JW'
-    DYZUR = 'dyżur', 'dyżur'
-    URLOP = 'urlop', 'urlop'
-    WOLNE = 'wolne', 'wolne'
-    POLIGON = 'poligon', 'poligon'
-    KURS = 'kurs', 'kurs'
-    ZWOLNIENIE_LEKARSKIE = 'zwolnienie lekarskie', 'zwolnienie lekarskie'
-    INNE = 'inne', 'inne'
+activity_names = (
+    ('służba oficera', 'służba oficera'),
+    ('służba pomocnika', 'służba pomocnika'),
+    ('służba podoficera', 'służba podoficera'),
+    ('służba dyżurnego', 'służba dyżurnego'),
+    ('służba PST', 'służba PST'),
+    ('służba PKT', 'służba PKT'),
+    ('służba PA garnizonu', 'służba PA garnizonu'),
+    ('służba PA JW', 'służba PA JW'),
+    ('dyżur', 'dyżur'),
+    ('urlop', 'urlop'),
+    ('wolne', 'wolne'),
+    ('poligon', 'poligon'),
+    ('kurs', 'kurs'),
+    ('zwolnienie lekarskie', 'zwolnienie lekarskie'),
+    ('inne', 'inne'),
+)

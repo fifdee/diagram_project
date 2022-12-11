@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<table>
+    {% for soldier, days in activities.items %}
+        <tr>
+            <td>{{ soldier }}</td>
+            {% for activity in days.values %}
+                <td>{{ activity }}</td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}
