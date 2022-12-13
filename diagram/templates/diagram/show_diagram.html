@@ -1,16 +1,45 @@
 {% extends 'base.html' %}
+{% load crispy_forms_filters %}
 
 {% block content %}
 
-<table>
-    {% for soldier, days in activities.items %}
+    <table class="table table-bordered table-sm">
+        <thead>
         <tr>
-            <td>{{ soldier }}</td>
-            {% for activity in days.values %}
-                <td>{{ activity }}</td>
+            <th scope="col">#</th>
+            {% for day in dates %}
+                <th scope="col">{{ day|date:"d M" }}</th>
             {% endfor %}
         </tr>
-    {% endfor %}
-</table>
+        </thead>
+        <tbody>
+        {% for soldier, days in activities.items %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}. {{ soldier.rank }} {{ soldier.first_name }} {{ soldier.last_name }}</th>
+                {% for activity in days.values %}
+                    <td>
+                        <form action="{% url 'show-diagram' %}" method="POST" id="activities_form">
+                            {% csrf_token %}
+
+                            <input type="hidden" name="soldier" value="{{ soldier }}"/>
+                            <input type="hidden" name="soldier_pk" value="{{ activity.soldier_pk }}"/>
+                            <input type="hidden" name="activity_previous" value="{{ activity.name }}"/>
+                            <input type="hidden" name="activity_previous_pk" value="{{ activity.pk }}"/>
+                            <input type="hidden" name="date" value="{{ activity.date }}"/>
+
+                            <select name="activity_new" style="width: min-content; border: none;"
+                                    onchange="this.form.submit()">
+                                {% for choice in choices %}
+                                    <option {% if activity.name.name == choice.0 %}selected{% endif %} class="small"
+                                            value={{ choice.0 }}>{{ choice.0 }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 
 {% endblock %}
