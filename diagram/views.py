@@ -43,7 +43,7 @@ class ShowDiagram(generic.View):
     def post(self, request):
         soldier = Soldier.objects.get(pk=request.POST['soldier_pk'])
         activity_name = request.POST['activity_new']
-        day = datetime.datetime.strptime(request.POST['date'], '%d.%m.%Y')
+        day = datetime.datetime.strptime(request.POST['date'], '%d.%m.%Y').date()
 
         print(soldier)
         print(activity_name)
@@ -51,15 +51,71 @@ class ShowDiagram(generic.View):
 
         activity_previous_pk = request.POST['activity_previous_pk']
         if activity_previous_pk != '':
+            # MODIFYING OR SPLITTING PREVIOUS ACTIVITY
             previous_activity = Activity.objects.get(pk=activity_previous_pk)
-        #     TODO usunąć poprzednią aktywność w tym dniu lub rozbić na dwie jeśli daty są szersze
+            print(f'previous_activity.start_date: {previous_activity.start_date}')
+            print(f'previous_activity.end_date: {previous_activity.end_date}')
 
-        Activity.objects.create(
-            soldier=soldier,
-            name=activity_name,
-            start_date=day,
-            end_date=day
-        )
+            if previous_activity.start_date == day and previous_activity.end_date == day:
+                previous_activity.delete()
+            elif previous_activity.start_date < day and previous_activity.end_date == day:
+                previous_activity.end_date = previous_activity.end_date + datetime.timedelta(days=-1)
+                previous_activity.save()
+            elif previous_activity.start_date == day and previous_activity.end_date > day:
+                previous_activity.start_date = previous_activity.start_date + datetime.timedelta(days=1)
+                previous_activity.save()
+            else:
+                end_date = previous_activity.end_date
+                previous_activity.end_date = day + datetime.timedelta(days=-1)
+                previous_activity.save()
 
-        # TODO sprawdzić czy są aktywności okalające z lewej i / lub prawej i w razie konieczności jeśli jest taka sama - połączyć
+                Activity.objects.create(
+                    soldier=previous_activity.soldier,
+                    name=previous_activity.name,
+                    description=previous_activity.description,
+                    start_date=day + datetime.timedelta(days=1),
+                    end_date=end_date
+                )
+
+        new_activity = None
+        if activity_name != '':
+            new_activity = Activity.objects.create(
+                soldier=soldier,
+                name=activity_name,
+                start_date=day,
+                end_date=day
+            )
+
+        if new_activity:
+            left_activity = None
+            right_activity = None
+            try:
+                left_activity = Activity.objects.get(end_date=day + datetime.timedelta(days=-1),
+                                                     soldier=new_activity.soldier,
+                                                     name=new_activity.name)
+            except Activity.DoesNotExist:
+                print('No "left" activity for the same soldier and same activity name.')
+
+            try:
+                right_activity = Activity.objects.get(start_date=day + datetime.timedelta(days=1),
+                                                      soldier=new_activity.soldier,
+                                                      name=new_activity.name)
+            except Activity.DoesNotExist:
+                print('No "right" activity for the same soldier nad same activity name.')
+
+            # MERGING THE SAME ACTIVITIES
+            if left_activity and not right_activity:
+                new_activity.delete()
+                left_activity.end_date = day
+                left_activity.save()
+            elif right_activity and not left_activity:
+                new_activity.delete()
+                right_activity.start_date = day
+                right_activity.save()
+            elif left_activity and right_activity:
+                left_activity.end_date = right_activity.end_date
+                right_activity.delete()
+                new_activity.delete()
+                left_activity.save()
+
         return redirect('show-diagram')
