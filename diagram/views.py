@@ -40,7 +40,7 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
         context = {
             'activities': activities,
             'dates': sorted(dates),
-            'choices': sorted(activity_names),
+            'choices': sorted([a[0] for a in activity_names]),
         }
 
         return render(request, template_name='diagram/show_diagram.html', context=context)
