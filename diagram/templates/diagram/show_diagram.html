@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'account/base.html' %}
 {% load crispy_forms_filters %}
 
 {% block content %}
@@ -15,7 +15,12 @@
         <tbody>
         {% for soldier, days in activities.items %}
             <tr>
-                <th scope="row">{{ forloop.counter }}. {{ soldier.rank }} {{ soldier.first_name }} {{ soldier.last_name }}</th>
+                <th scope="row">
+                    <a class="text-decoration-none text-dark"
+                       href="{% url 'soldier-detail' soldier.pk %}">
+                        {{ forloop.counter }}. {{ soldier.last_name }} {{ soldier.first_name }} ({{ soldier.rank }})
+                    </a>
+                </th>
                 {% for activity in days.values %}
                     <td>
                         <form action="{% url 'show-diagram' %}" method="POST" id="activities_form">

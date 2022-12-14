@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db.models.signals import pre_save
+
 from diagram.text_choices import ranks, activity_names
 
 
@@ -33,3 +35,16 @@ class Activity(models.Model):
 
     def __str__(self):
         return f'{self.name}, {self.description} ({self.soldier})'
+
+
+def set_username(sender, instance, **kwargs):
+    email = instance.email
+    username = email[:30]
+    n = 1
+    while User.objects.exclude(pk=instance.pk).filter(username=username).exists():
+        n += 1
+        username = email[:(29 - len(str(n)))] + '-' + str(n)
+    instance.username = username
+
+
+pre_save.connect(set_username, sender=User)

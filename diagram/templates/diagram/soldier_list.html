@@ -1,0 +1,58 @@
+{% extends 'account/base.html' %}
+{% load crispy_forms_filters %}
+
+{% block content %}
+
+    <style>
+        tr:hover {
+            background-color: ghostwhite;
+        }
+
+        a:hover {
+            color: black;
+        }
+
+        td a {
+            display: block;
+            color: black;
+        }
+
+        th a {
+            display: block;
+            color: black;
+        }
+    </style>
+
+    <table class="table">
+        <thead>
+        <tr class="d-flex justify-content-center">
+            <th class="col col-md-1 px-0" scope="col">#</th>
+            <th class="col col-md-1 px-0" scope="col">stopień</th>
+            <th class="col col-md-1 px-0" scope="col">imię</th>
+            <th class="col col-md-1 px-0" scope="col">nazwisko</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for soldier in object_list %}
+            <tr class="d-flex justify-content-center">
+                <th class="col col-md-1 px-0" scope="row"><a class="text-decoration-none"
+                                                        href="{% url 'soldier-detail' soldier.pk %}">{{ forloop.counter }}</a>
+                </th>
+                <td class="col col-md-1 px-0"><a class="text-decoration-none"
+                                            href="{% url 'soldier-detail' soldier.pk %}">{{ soldier.rank }}</a></td>
+                <td class="col col-md-1 px-0"><a class="text-decoration-none"
+                                            href="{% url 'soldier-detail' soldier.pk %}">{{ soldier.first_name }}</a>
+                </td>
+                <td class="col col-md-1 px-0"><a class="text-decoration-none"
+                                            href="{% url 'soldier-detail' soldier.pk %}">{{ soldier.last_name }}</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="d-flex flex-column align-items-center">
+        <a class="col" href="{% url 'soldier-create' %}"><button class="btn btn-outline-primary mb-3">Dodaj nowego żołnierza</button></a>
+    </div>
+
+{% endblock %}

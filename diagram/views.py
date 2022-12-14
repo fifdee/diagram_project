@@ -1,13 +1,18 @@
+from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.utils.timezone import now
 from django.views import generic
 import datetime
 
+from diagram.forms import SoldierForm
 from diagram.models import Soldier, Activity
 from diagram.text_choices import activity_names
 
 
-class ShowDiagram(generic.View):
+class ShowDiagram(LoginRequiredMixin, generic.View):
     def get(self, request):
         today = now().date()
         soldiers = Soldier.objects.filter(subdivision=request.user.subdivision).order_by('last_name')
@@ -16,7 +21,7 @@ class ShowDiagram(generic.View):
 
         for soldier in soldiers:
             activities[soldier] = {}
-            for j in range(0, 16):
+            for j in range(0, 14):
                 this_date = today + datetime.timedelta(days=j)
                 dates.add(this_date)
                 activities[soldier][j] = {}
@@ -119,3 +124,45 @@ class ShowDiagram(generic.View):
                 left_activity.save()
 
         return redirect('show-diagram')
+
+
+class SoldierList(LoginRequiredMixin, generic.ListView):
+    template_name = 'diagram/soldier_list.html'
+
+    def get_queryset(self):
+        return Soldier.objects.filter(subdivision=self.request.user.subdivision).order_by('last_name')
+
+
+class SoldierDetail(LoginRequiredMixin, generic.DetailView):
+    template_name = 'diagram/soldier_detail.html'
+
+    def get_queryset(self):
+        return Soldier.objects.filter(subdivision=self.request.user.subdivision).order_by('last_name')
+
+
+class SoldierUpdate(LoginRequiredMixin, generic.UpdateView):
+    template_name = 'diagram/soldier_update.html'
+    form_class = SoldierForm
+
+    def form_valid(self, form):
+        soldier = form.save()
+        messages.add_message(self.request, messages.SUCCESS, 'Zmodyfikowano dane żołnierza.')
+        return redirect('soldier-detail', pk=soldier.pk)
+
+    def get_queryset(self):
+        return Soldier.objects.filter(subdivision=self.request.user.subdivision).order_by('last_name')
+
+
+class SoldierCreate(LoginRequiredMixin, generic.CreateView):
+    template_name = 'diagram/soldier_create.html'
+    form_class = SoldierForm
+    model = Soldier
+
+    def form_valid(self, form):
+        new_soldier = form.save(commit=False)
+        new_soldier.subdivision = self.request.user.subdivision
+        new_soldier.save()
+
+        messages.add_message(self.request, messages.SUCCESS, 'Dodano żołnierza.')
+
+        return redirect('soldier-detail', pk=new_soldier.pk)
