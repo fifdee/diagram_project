@@ -45,15 +45,28 @@
             </tbody>
         </table>
 
-        <a class="mt-3" href="{% url 'activity-create' soldier_pk=object.pk %}">
+        <a class="mt-0" href="{% url 'activity-create' soldier_pk=object.pk %}">
             <button class="btn btn-outline-primary">Dodaj aktywność dla tego żołnierza</button>
         </a>
 
-        <a class="mt-3" href="{% url 'soldier-update' object.pk %}">
+        <h5 class="mt-3">Dane żołnierza:</h5>
+
+        <table class="table">
+            <tbody>
+            {% for field in soldier_fields %}
+                <tr class="d-flex justify-content-center">
+                    <th class="col col-md-1 px-0" scope="row">{{ field.label }}</th>
+                    <td class="col col-md-2 px-0">{{ field.data|default_if_none:'' }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <a class="mt-0" href="{% url 'soldier-update' object.pk %}">
             <button class="btn btn-outline-primary">Zaktualizuj dane żołnierza</button>
         </a>
 
-        <a class="mt-3" href="{% url 'soldier-delete' object.pk %}">
+        <a class="mt-5" href="{% url 'soldier-delete' object.pk %}">
             <button class="btn btn-outline-danger">Usuń żołnierza</button>
         </a>
     </div>

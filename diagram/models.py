@@ -22,6 +22,11 @@ class Soldier(models.Model):
     last_name = models.CharField(max_length=30, verbose_name='nazwisko')
     subdivision = models.ForeignKey(Subdivision, on_delete=models.SET_NULL, null=True, blank=True,
                                     verbose_name='pododdział')
+    position = models.CharField(max_length=30, verbose_name='stanowisko', null=True, blank=True)
+    personal_number = models.IntegerField(verbose_name='PESEL', null=True, blank=True)
+    father_name = models.CharField(max_length=30, verbose_name='imię ojca', null=True, blank=True)
+    id_card_number = models.CharField(max_length=30, verbose_name='nr leg. służb.', null=True, blank=True)
+    driving_license = models.CharField(max_length=30, verbose_name='kat. prawa jazdy', null=True, blank=True)
 
     def __str__(self):
         return f'{self.rank} {self.first_name} {self.last_name} ({self.subdivision})'

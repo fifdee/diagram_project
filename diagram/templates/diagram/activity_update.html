@@ -3,6 +3,8 @@
 
 {% block content %}
     <div class="d-flex flex-column align-items-center">
+        <a href="{% url 'soldier-detail' soldier_pk %}"><button class="btn btn-outline-primary">Wróć</button></a>
+
         <form class="col-md-4" method="post">
             {% csrf_token %}
             {{ form|crispy }}
