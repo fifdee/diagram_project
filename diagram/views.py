@@ -1,13 +1,15 @@
+from django import forms
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render, redirect
+from django.http import Http404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.timezone import now
 from django.views import generic
 import datetime
 
-from diagram.forms import SoldierForm
+from diagram.forms import SoldierForm, ActivityForm
 from diagram.models import Soldier, Activity
 from diagram.text_choices import activity_names
 
@@ -79,7 +81,8 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
                     name=previous_activity.name,
                     description=previous_activity.description,
                     start_date=day + datetime.timedelta(days=1),
-                    end_date=end_date
+                    end_date=end_date,
+                    subdivision=request.user.subdivision
                 )
 
         new_activity = None
@@ -88,7 +91,8 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
                 soldier=soldier,
                 name=activity_name,
                 start_date=day,
-                end_date=day
+                end_date=day,
+                subdivision=request.user.subdivision
             )
 
         if new_activity:
@@ -137,7 +141,13 @@ class SoldierDetail(LoginRequiredMixin, generic.DetailView):
     template_name = 'diagram/soldier_detail.html'
 
     def get_queryset(self):
-        return Soldier.objects.filter(subdivision=self.request.user.subdivision).order_by('last_name')
+        return Soldier.objects.filter(subdivision=self.request.user.subdivision)
+
+    def get_context_data(self, **kwargs):
+        context = super(SoldierDetail, self).get_context_data(**kwargs)
+        context['activities'] = Activity.objects.filter(soldier=self.get_object(), end_date__gte=now()).order_by(
+            'start_date')
+        return context
 
 
 class SoldierUpdate(LoginRequiredMixin, generic.UpdateView):
@@ -150,7 +160,7 @@ class SoldierUpdate(LoginRequiredMixin, generic.UpdateView):
         return redirect('soldier-detail', pk=soldier.pk)
 
     def get_queryset(self):
-        return Soldier.objects.filter(subdivision=self.request.user.subdivision).order_by('last_name')
+        return Soldier.objects.filter(subdivision=self.request.user.subdivision)
 
 
 class SoldierCreate(LoginRequiredMixin, generic.CreateView):
@@ -166,3 +176,70 @@ class SoldierCreate(LoginRequiredMixin, generic.CreateView):
         messages.add_message(self.request, messages.SUCCESS, 'Dodano żołnierza.')
 
         return redirect('soldier-detail', pk=new_soldier.pk)
+
+
+class SoldierDelete(LoginRequiredMixin, generic.DeleteView):
+    template_name = 'diagram/soldier_delete.html'
+    model = Soldier
+
+    def get_queryset(self):
+        return Soldier.objects.filter(subdivision=self.request.user.subdivision)
+
+    def get_success_url(self):
+        messages.add_message(self.request, messages.SUCCESS, 'Usunięto żołnierza.')
+        return reverse('soldier-list')
+
+
+class ActivityUpdate(LoginRequiredMixin, generic.UpdateView):
+    template_name = 'diagram/activity_update.html'
+    form_class = ActivityForm
+
+    def form_valid(self, form):
+        activity = form.save()
+        messages.add_message(self.request, messages.SUCCESS, 'Zmodyfikowano aktywność.')
+        return redirect('soldier-detail', pk=activity.soldier.pk)
+
+    def get_queryset(self):
+        return Activity.objects.filter(subdivision=self.request.user.subdivision)
+
+
+class ActivityDelete(LoginRequiredMixin, generic.View):
+    def get(self, request, pk):
+        try:
+            activity = Activity.objects.get(pk=pk, subdivision=request.user.subdivision)
+        except Activity.DoesNotExist:
+            raise Http404()
+
+        soldier_pk = activity.soldier.pk
+        messages.add_message(request, messages.SUCCESS, 'Usunięto aktywność.')
+        activity.delete()
+
+        return redirect('soldier-detail', pk=soldier_pk)
+
+
+class ActivityCreate(LoginRequiredMixin, generic.CreateView):
+    model = Activity
+    template_name = 'diagram/activity_create.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(ActivityCreate, self).get_context_data(**kwargs)
+        soldier = get_object_or_404(Soldier, pk=self.kwargs['soldier_pk'])
+        context['soldier_pk'] = soldier.pk
+        return context
+
+    def get_form(self, form_class=None):
+        form = super(ActivityCreate, self).get_form(form_class=ActivityForm)
+        soldier = get_object_or_404(Soldier, pk=self.kwargs['soldier_pk'])
+        form.fields['soldier'].initial = soldier
+        form.fields['start_date'].widget = forms.widgets.DateInput(attrs={'type': 'date'})
+        form.fields['end_date'].widget = forms.widgets.DateInput(attrs={'type': 'date'})
+        return form
+
+    def form_valid(self, form):
+        soldier = get_object_or_404(Soldier, pk=self.kwargs['soldier_pk'])
+        activity = form.save(commit=False)
+        activity.soldier = soldier
+        activity.subdivision = self.request.user.subdivision
+        activity.save()
+
+        return redirect('soldier-detail', pk=soldier.pk)

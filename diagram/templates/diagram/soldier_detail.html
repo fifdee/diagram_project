@@ -3,10 +3,58 @@
 
 {% block content %}
     <div class="d-flex flex-column align-items-center">
-        {{ object }}
+        <h3>{{ object }}</h3>
+
+        <h5>Aktualne i przyszłe aktywności:</h5>
+        <table class="table">
+            <thead>
+            <tr class="d-flex justify-content-center">
+                <th class="col col-md-1 px-0" scope="col">#</th>
+                <th class="col col-md-1 px-0" scope="col">nazwa</th>
+                <th class="col col-md-1 px-0" scope="col">opis</th>
+                <th class="col col-md-1 px-0" scope="col">początek</th>
+                <th class="col col-md-1 px-0" scope="col">koniec</th>
+                <th class="col col-md-1 px-0" scope="col">edycja</th>
+                <th class="col col-md-1 px-0" scope="col">usunięcie</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for activity in activities %}
+                <tr class="d-flex justify-content-center">
+                    <th class="col col-md-1 px-0" scope="row">{{ forloop.counter }}</th>
+                    <td class="col col-md-1 px-0">{{ activity.name }}</td>
+                    <td class="col col-md-1 px-0">{{ activity.description }}</td>
+                    <td class="col col-md-1 px-0">{{ activity.start_date }}</td>
+                    <td class="col col-md-1 px-0">{{ activity.end_date }}</td>
+                    <td class="col col-md-1 px-0">
+                        <a href="{% url 'activity-update' activity.pk %}">
+                            <button class="btn btn-outline-primary btn-sm">Edytuj</button>
+                        </a>
+                    </td>
+                    <td class="col col-md-1 px-0">
+                        <a href="{% url 'activity-delete' activity.pk %}">
+                            <button class="btn btn-outline-danger btn-sm">Usuń</button>
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr class="d-flex justify-content-center">
+                    <td class="col col-md-7 px-0">Brak aktywności dla ww. żołnierza</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <a class="mt-3" href="{% url 'activity-create' soldier_pk=object.pk %}">
+            <button class="btn btn-outline-primary">Dodaj aktywność dla tego żołnierza</button>
+        </a>
 
         <a class="mt-3" href="{% url 'soldier-update' object.pk %}">
             <button class="btn btn-outline-primary">Zaktualizuj dane żołnierza</button>
+        </a>
+
+        <a class="mt-3" href="{% url 'soldier-delete' object.pk %}">
+            <button class="btn btn-outline-danger">Usuń żołnierza</button>
         </a>
     </div>
 {% endblock %}
