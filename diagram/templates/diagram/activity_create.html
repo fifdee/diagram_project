@@ -3,13 +3,16 @@
 
 {% block content %}
     <div class="d-flex flex-column align-items-center">
-        <a href="{% url 'soldier-detail' soldier_pk %}"><button class="btn btn-outline-primary">Wróć</button></a>
+        <a class="mb-1" href="{% url 'soldier-detail' soldier_pk %}">
+            <button class="btn btn-outline-primary">Wróć</button>
+        </a>
 
         <form class="col-md-4" method="post">
             {% csrf_token %}
             {{ form|crispy }}
             <button class="btn btn-outline-primary" type="submit"
-                    onclick="this.disabled=true; this.form.submit();">Zapisz</button>
+                    onclick="this.disabled=true; this.form.submit();">Zapisz
+            </button>
         </form>
     </div>
 {% endblock %}

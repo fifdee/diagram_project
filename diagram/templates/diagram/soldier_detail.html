@@ -5,7 +5,27 @@
     <div class="d-flex flex-column align-items-center">
         <h3>{{ object }}</h3>
 
-        <h5>Aktualne i przyszłe aktywności:</h5>
+        <form method="get">
+            <h5><select name="activity_age" style="border: none; text-align: center;"
+                        onchange="this.form.submit()">
+                <option {% if request.GET.activity_age == 'current' %}selected{% endif %} value="current">
+                    Aktualne i przyszłe aktywności
+                </option>
+                <option {% if request.GET.activity_age == '30days' %}selected{% endif %} value="30days">
+                    Zakończone miesiąc temu i przyszłe aktywności
+                </option>
+                <option {% if request.GET.activity_age == '90days' %}selected{% endif %} value="90days">
+                    Zakończone 3 miesiące temu i przyszłe aktywności
+                </option>
+                <option {% if request.GET.activity_age == '180days' %}selected{% endif %} value="180days">
+                    Zakończone 6 miesięcy temu i przyszłe aktywności
+                </option>
+                <option {% if request.GET.activity_age == 'all' %}selected{% endif %} value="all">
+                    Wszystkie aktywności od początku
+                </option>
+            </select></h5>
+        </form>
+
         <table class="table">
             <thead>
             <tr class="d-flex justify-content-center">

@@ -6,6 +6,7 @@ from django.forms import model_to_dict
 from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.utils.datastructures import MultiValueDictKeyError
 from django.utils.timezone import now
 from django.views import generic
 import datetime
@@ -149,9 +150,31 @@ class SoldierDetail(LoginRequiredMixin, generic.DetailView):
         return Soldier.objects.filter(subdivision=self.request.user.subdivision)
 
     def get_context_data(self, **kwargs):
+        activity_age = 'current'
+        try:
+            activity_age = self.request.GET['activity_age']
+        except MultiValueDictKeyError:
+            print('"start" parameter in URL not found - using "current" as default')
+
+        print(activity_age)
         context = super(SoldierDetail, self).get_context_data(**kwargs)
-        context['activities'] = Activity.objects.filter(soldier=self.get_object(), end_date__gte=now()).order_by(
-            'start_date')
+
+        activities = None
+        if activity_age == '30days':
+            activities = Activity.objects.filter(soldier=self.get_object(),
+                                                 end_date__gte=now()-datetime.timedelta(days=30)).order_by('start_date')
+        elif activity_age == '90days':
+            activities = Activity.objects.filter(soldier=self.get_object(),
+                                                 end_date__gte=now()-datetime.timedelta(days=90)).order_by('start_date')
+        elif activity_age == '180days':
+            activities = Activity.objects.filter(soldier=self.get_object(),
+                                                 end_date__gte=now()-datetime.timedelta(days=180)).order_by('start_date')
+        elif activity_age == 'all':
+            activities = Activity.objects.filter(soldier=self.get_object()).order_by('start_date')
+        else:
+            activities = Activity.objects.filter(soldier=self.get_object(), end_date__gte=now()).order_by('start_date')
+
+        context['activities'] = activities
         context['soldier_fields'] = SoldierDetailForm(data=model_to_dict(self.get_object()))
         return context
 
@@ -159,6 +182,12 @@ class SoldierDetail(LoginRequiredMixin, generic.DetailView):
 class SoldierUpdate(LoginRequiredMixin, generic.UpdateView):
     template_name = 'diagram/soldier_update.html'
     form_class = SoldierForm
+
+    def get_context_data(self, **kwargs):
+        context = super(SoldierUpdate, self).get_context_data(**kwargs)
+        soldier = get_object_or_404(Soldier, pk=self.get_object().pk)
+        context['soldier_pk'] = soldier.pk
+        return context
 
     def form_valid(self, form):
         soldier = form.save()
@@ -196,39 +225,6 @@ class SoldierDelete(LoginRequiredMixin, generic.DeleteView):
         return reverse('soldier-list')
 
 
-class ActivityUpdate(LoginRequiredMixin, generic.UpdateView):
-    template_name = 'diagram/activity_update.html'
-    form_class = ActivityForm
-
-    def get_context_data(self, **kwargs):
-        context = super(ActivityUpdate, self).get_context_data(**kwargs)
-        soldier = get_object_or_404(Soldier, pk=self.get_object().soldier.pk)
-        context['soldier_pk'] = soldier.pk
-        return context
-
-    def form_valid(self, form):
-        activity = form.save(commit=False)
-        if activity.end_date < activity.start_date:
-            form.add_error('end_date',
-                           f'data zakończenia nie może być przed datą rozpoczęcia')
-            return super(ActivityUpdate, self).form_invalid(form)
-
-        soldier = activity.soldier
-        conflict = activity_conflicts(activity)
-        if conflict is None:
-            activity.save()
-            messages.add_message(self.request, messages.SUCCESS, 'Zmodyfikowano aktywność.')
-        else:
-            form.add_error(conflict['which_date'],
-                           f'wybrana data nakłada się z inną aktywnością: {conflict["name"]} (data rozpoczęcia: {conflict["start_date"]}, data zakończenia: {conflict["end_date"]})')
-            return super(ActivityUpdate, self).form_invalid(form)
-
-        return redirect('soldier-detail', pk=soldier.pk)
-
-    def get_queryset(self):
-        return Activity.objects.filter(subdivision=self.request.user.subdivision)
-
-
 class ActivityCreate(LoginRequiredMixin, generic.CreateView):
     model = Activity
     template_name = 'diagram/activity_create.html'
@@ -248,26 +244,33 @@ class ActivityCreate(LoginRequiredMixin, generic.CreateView):
         return form
 
     def form_valid(self, form):
-        soldier = get_object_or_404(Soldier, pk=self.kwargs['soldier_pk'])
         activity = form.save(commit=False)
-        activity.soldier = soldier
         activity.subdivision = self.request.user.subdivision
+        activity.save()
+        messages.add_message(self.request, messages.SUCCESS, f'Dodano aktywność: {activity}')
 
-        if activity.end_date < activity.start_date:
-            form.add_error('end_date',
-                           f'data zakończenia nie może być przed datą rozpoczęcia')
-            return super(ActivityCreate, self).form_invalid(form)
+        return redirect('soldier-detail', pk=self.kwargs['soldier_pk'])
 
-        conflict = activity_conflicts(activity)
-        if conflict is None:
-            activity.save()
-            messages.add_message(self.request, messages.SUCCESS, 'Dodano aktywność.')
-        else:
-            form.add_error(conflict['which_date'],
-                           f'wybrana data nakłada się z inną aktywnością: {conflict["name"]} (data rozpoczęcia: {conflict["start_date"]}, data zakończenia: {conflict["end_date"]})')
-            return super(ActivityCreate, self).form_invalid(form)
+
+class ActivityUpdate(LoginRequiredMixin, generic.UpdateView):
+    template_name = 'diagram/activity_update.html'
+    form_class = ActivityForm
+
+    def get_context_data(self, **kwargs):
+        context = super(ActivityUpdate, self).get_context_data(**kwargs)
+        soldier = get_object_or_404(Soldier, pk=self.get_object().soldier.pk)
+        context['soldier_pk'] = soldier.pk
+        return context
+
+    def form_valid(self, form):
+        activity = form.save()
+        soldier = activity.soldier
+        messages.add_message(self.request, messages.SUCCESS, f'Zmodyfikowano aktywność: {activity}')
 
         return redirect('soldier-detail', pk=soldier.pk)
+
+    def get_queryset(self):
+        return Activity.objects.filter(subdivision=self.request.user.subdivision)
 
 
 class ActivityDelete(LoginRequiredMixin, generic.View):
@@ -278,7 +281,7 @@ class ActivityDelete(LoginRequiredMixin, generic.View):
             raise Http404()
 
         soldier_pk = activity.soldier.pk
-        messages.add_message(request, messages.SUCCESS, 'Usunięto aktywność.')
+        messages.add_message(request, messages.SUCCESS, f'Usunięto aktywność {activity}')
         activity.delete()
 
         return redirect('soldier-detail', pk=soldier_pk)

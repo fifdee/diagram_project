@@ -10,7 +10,7 @@ urlpatterns = [
     path('soldier-update/<int:pk>/', SoldierUpdate.as_view(), name='soldier-update'),
     path('soldier-create/', SoldierCreate.as_view(), name='soldier-create'),
     path('soldier-delete/<int:pk>/', SoldierDelete.as_view(), name='soldier-delete'),
+    path('activity-create/<int:soldier_pk>/', ActivityCreate.as_view(), name='activity-create'),
     path('activity-update/<int:pk>/', ActivityUpdate.as_view(), name='activity-update'),
     path('activity-delete/<int:pk>/', ActivityDelete.as_view(), name='activity-delete'),
-    path('activity-create/<int:soldier_pk>/', ActivityCreate.as_view(), name='activity-create'),
 ]

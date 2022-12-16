@@ -1,11 +1,11 @@
-from diagram.models import Activity
+# from diagram.models import Activity
 
 
-def activity_conflicts(activity):
-    subdivision = activity.subdivision
+def activity_conflicts(activity, activity_class):
     soldier = activity.soldier
+    subdivision = soldier.subdivision
 
-    other_activities = Activity.objects.filter(subdivision=subdivision, soldier=soldier)
+    other_activities = activity_class.objects.filter(subdivision=subdivision, soldier=soldier)
     print(other_activities)
 
     print('-------------------------------------')

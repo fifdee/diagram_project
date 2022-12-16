@@ -1,8 +1,10 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import pre_save
 
 from diagram.text_choices import ranks, activity_names
+from diagram.utilities import activity_conflicts
 
 
 class User(AbstractUser):
@@ -35,14 +37,28 @@ class Soldier(models.Model):
 class Activity(models.Model):
     soldier = models.ForeignKey(Soldier, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='żołnierz')
     name = models.CharField(max_length=30, choices=activity_names, verbose_name='nazwa')
-    description = models.TextField(default='', blank=True, verbose_name='opis')
+    description = models.CharField(max_length=200, default='', blank=True, verbose_name='opis')
     start_date = models.DateField(verbose_name='data rozpoczęcia')
     end_date = models.DateField(verbose_name='data zakończenia')
     subdivision = models.ForeignKey(Subdivision, on_delete=models.SET_NULL, null=True, blank=True,
                                     verbose_name='pododdział')
 
+    def clean(self):
+        super(Activity, self).clean()
+
+        if self.end_date < self.start_date:
+            raise ValidationError({'end_date': 'data zakończenia nie może być przed datą rozpoczęcia'})
+
+        # validation for specific soldier's activities
+        if self.soldier:
+            conflict = activity_conflicts(self, Activity)
+            if conflict:
+                raise ValidationError(
+                    f'Wybrane daty rozpoczęcia i zakończenia nakładają się z inną aktywnością: {conflict["name"]} '
+                    f'(data rozpoczęcia: {conflict["start_date"]}, data zakończenia: {conflict["end_date"]})')
+
     def __str__(self):
-        return f'{self.name}, {self.description} ({self.soldier})'
+        return f'{self.name} {self.description} ({self.soldier})'
 
 
 def set_username(sender, instance, **kwargs):
