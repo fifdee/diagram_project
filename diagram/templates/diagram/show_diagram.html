@@ -3,26 +3,74 @@
 
 {% block content %}
 
+    <div class="">
+        <form method="get" class="d-flex justify-content-evenly">
+            <button type="submit" name="start_day" class="btn"
+                    value="{% if request.GET.start_day %}{{ request.GET.start_day|add:"-30" }}{% else %}-31{% endif %}">
+                < 30 dni
+            </button>
+
+            <button type="submit" name="start_day" class="btn"
+                    value="{% if request.GET.start_day %}{{ request.GET.start_day|add:"-5" }}{% else %}-6{% endif %}">
+                < 5 dni
+            </button>
+
+            <button type="submit" name="start_day" class="btn"
+                    value="{% if request.GET.start_day %}{{ request.GET.start_day|add:"-1" }}{% else %}-2{% endif %}">
+                < 1 dzień
+            </button>
+
+            <h5><select name="days_count" style="border: none; text-align: center;"
+                        onchange="this.form.submit()">
+                {% for i in range %}
+                    <option {% if request.GET.days_count == i|stringformat:"i" %}selected{% elif not request.GET.days_count and default_days_count == i %}selected{% endif %}
+                            value="{{ i }}">
+                        Ilość wyświetlanych dni: {{ i }}
+                    </option>
+                {% endfor %}
+            </select></h5>
+
+            <button type="submit" name="start_day" class="btn"
+                    value="{% if request.GET.start_day %}{{ request.GET.start_day|add:"1" }}{% else %}0{% endif %}">
+                1 dzień >
+            </button>
+
+            <button type="submit" name="start_day" class="btn"
+                    value="{% if request.GET.start_day %}{{ request.GET.start_day|add:"5" }}{% else %}4{% endif %}">
+                5 dni >
+            </button>
+
+            <button type="submit" name="start_day" class="btn"
+                    value="{% if request.GET.start_day %}{{ request.GET.start_day|add:"30" }}{% else %}29{% endif %}">
+                30 dni >
+            </button>
+        </form>
+    </div>
+
     <table class="table table-bordered table-sm">
         <thead>
         <tr>
             <th scope="col">#</th>
             {% for day in dates %}
-                <th scope="col">{{ day|date:"d M" }}</th>
+                <th scope="col"
+                    style="text-align: center;
+                            {% if day == today %}background-color: wheat;{% endif %}{% if day.weekday == 6 %}color: crimson{% endif %}">
+                    {{ day|date:"d M" }}<br>{{ day|date:"D" }}
+                </th>
             {% endfor %}
         </tr>
         </thead>
         <tbody>
         {% for soldier, days in activities.items %}
             <tr>
-                <th scope="row">
+                <th scope="row" style="white-space: nowrap;">
                     <a class="text-decoration-none text-dark"
                        href="{% url 'soldier-detail' soldier.pk %}">
                         {{ forloop.counter }}. {{ soldier.last_name }} {{ soldier.first_name }} ({{ soldier.rank }})
                     </a>
                 </th>
                 {% for activity in days.values %}
-                    <td>
+                    <td style="text-align: center">
                         <form action="{% url 'show-diagram' %}" method="POST" id="activities_form">
                             {% csrf_token %}
 
@@ -31,6 +79,8 @@
                             <input type="hidden" name="activity_previous" value="{{ activity.name }}"/>
                             <input type="hidden" name="activity_previous_pk" value="{{ activity.pk }}"/>
                             <input type="hidden" name="date" value="{{ activity.date }}"/>
+                            <input type="hidden" name="start_day" value="{{ request.GET.start_day }}"/>
+                            <input type="hidden" name="days_count" value="{{ request.GET.days_count }}"/>
 
                             <select name="activity_new" style="width: min-content; border: none;"
                                     onchange="this.form.submit()">

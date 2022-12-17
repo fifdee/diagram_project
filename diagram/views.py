@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import model_to_dict
 from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.datastructures import MultiValueDictKeyError
 from django.utils.timezone import now
 from django.views import generic
@@ -14,7 +14,7 @@ import datetime
 from diagram.forms import SoldierForm, ActivityForm, SoldierDetailForm
 from diagram.models import Soldier, Activity
 from diagram.text_choices import activity_names
-from diagram.utilities import activity_conflicts
+from diagram.utilities import activity_conflicts, get_soldier_activities, get_url_params
 
 
 class ShowDiagram(LoginRequiredMixin, generic.View):
@@ -24,9 +24,24 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
         activities = {}
         dates = set()
 
+        default_start_day = -1  # yesterday
+        start_day = default_start_day
+        default_days_count = 12  # TODO load saved setting from settings model
+        days_count = default_days_count
+        try:
+            days_count = int(self.request.GET['days_count'])
+            start_day = int(self.request.GET['start_day'])
+        except MultiValueDictKeyError:
+            print('using default days_count and/or start_day value')
+        except ValueError:
+            print('invalid value for days_count and/or start_day parameter')
+
+        if days_count > 20:
+            days_count = 20
+
         for soldier in soldiers:
             activities[soldier] = {}
-            for j in range(0, 14):
+            for j in range(start_day, days_count + start_day):
                 this_date = today + datetime.timedelta(days=j)
                 dates.add(this_date)
                 activities[soldier][j] = {}
@@ -47,6 +62,10 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
 
         context = {
             'activities': activities,
+            'today': today,
+            'range': range(4, 21),
+            'default_days_count': default_days_count,
+            'default_start_day': default_start_day,
             'dates': sorted(dates),
             'choices': sorted([a[0] for a in activity_names]),
         }
@@ -133,7 +152,8 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
                 new_activity.delete()
                 left_activity.save()
 
-        return redirect('show-diagram')
+        url_params = get_url_params(request.POST['days_count'], request.POST['start_day'])
+        return redirect(f"{reverse_lazy('show-diagram')}{url_params}")
 
 
 class SoldierList(LoginRequiredMixin, generic.ListView):
@@ -159,22 +179,7 @@ class SoldierDetail(LoginRequiredMixin, generic.DetailView):
         print(activity_age)
         context = super(SoldierDetail, self).get_context_data(**kwargs)
 
-        activities = None
-        if activity_age == '30days':
-            activities = Activity.objects.filter(soldier=self.get_object(),
-                                                 end_date__gte=now()-datetime.timedelta(days=30)).order_by('start_date')
-        elif activity_age == '90days':
-            activities = Activity.objects.filter(soldier=self.get_object(),
-                                                 end_date__gte=now()-datetime.timedelta(days=90)).order_by('start_date')
-        elif activity_age == '180days':
-            activities = Activity.objects.filter(soldier=self.get_object(),
-                                                 end_date__gte=now()-datetime.timedelta(days=180)).order_by('start_date')
-        elif activity_age == 'all':
-            activities = Activity.objects.filter(soldier=self.get_object()).order_by('start_date')
-        else:
-            activities = Activity.objects.filter(soldier=self.get_object(), end_date__gte=now()).order_by('start_date')
-
-        context['activities'] = activities
+        context['activities'] = get_soldier_activities(activity_age, soldier=self.get_object())
         context['soldier_fields'] = SoldierDetailForm(data=model_to_dict(self.get_object()))
         return context
 

@@ -1,6 +1,3 @@
-# from diagram.models import Activity
-
-
 def activity_conflicts(activity, activity_class):
     soldier = activity.soldier
     subdivision = soldier.subdivision
@@ -25,3 +22,39 @@ def activity_conflicts(activity, activity_class):
                         'start_date': iterated_activity.start_date, 'end_date': iterated_activity.end_date}
             print('-------------------------------------')
     return None
+
+
+def get_soldier_activities(activity_age, soldier):
+    import datetime
+    from django.utils.timezone import now
+    from diagram.models import Activity
+
+    activities = None
+    if activity_age == '30days':
+        activities = Activity.objects.filter(soldier=soldier,
+                                             end_date__gte=now() - datetime.timedelta(days=30)).order_by('start_date')
+    elif activity_age == '90days':
+        activities = Activity.objects.filter(soldier=soldier,
+                                             end_date__gte=now() - datetime.timedelta(days=90)).order_by('start_date')
+    elif activity_age == '180days':
+        activities = Activity.objects.filter(soldier=soldier,
+                                             end_date__gte=now() - datetime.timedelta(days=180)).order_by('start_date')
+    elif activity_age == 'all':
+        activities = Activity.objects.filter(soldier=soldier).order_by('start_date')
+    else:
+        activities = Activity.objects.filter(soldier=soldier, end_date__gte=now()).order_by('start_date')
+    return activities
+
+
+def get_url_params(days_count_param, start_day_param):
+    url_params = ''
+    if days_count_param != '' or start_day_param != '':
+        url_params += '?'
+        if days_count_param != '':
+            url_params += f'days_count={days_count_param}'
+        if start_day_param != '':
+            if days_count_param != '':
+                url_params += f'&start_day={start_day_param}'
+            else:
+                url_params += f'start_day={start_day_param}'
+    return url_params

@@ -32,6 +32,7 @@ activity_names = (
     ('PA JW', 'służba PA JW'),
     ('PO SŁ.', 'po służbie'),
     ('DYŻUR', 'dyżur'),
+    ('OKO', 'OKO'),
     ('UR.WYP', 'urlop wypoczynkowy'),
     ('UR.DOD', 'urlop dodatkowy'),
     ('UR.OK', 'urlop okolicznościowy'),
