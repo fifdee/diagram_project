@@ -1,10 +1,10 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 
 from diagram.text_choices import ranks, activity_names
-from diagram.utilities import activity_conflicts
+from diagram.utilities import activity_conflicts, merge_neighbour_activities
 
 
 class User(AbstractUser):
@@ -59,6 +59,13 @@ class Activity(models.Model):
 
     def __str__(self):
         return f'{self.name} {self.description} ({self.soldier})'
+
+
+def launch_merge_neighbour_activities(sender, instance, **kwargs):
+    merge_neighbour_activities(instance)
+
+
+post_save.connect(launch_merge_neighbour_activities, sender=Activity)
 
 
 def set_username(sender, instance, **kwargs):
