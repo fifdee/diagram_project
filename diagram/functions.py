@@ -1,3 +1,4 @@
+
 def activity_conflicts(activity, activity_class):
     soldier = activity.soldier
     subdivision = soldier.subdivision
@@ -95,3 +96,18 @@ def merge_neighbour_activities(new_activity):
         right_activity.delete()
         new_activity.delete()
         left_activity.save()
+
+
+def update_soldier_info_names(subdivision, soldier_info_fields_names):
+    from diagram.models import Soldier, SoldierInfo
+
+    soldiers = Soldier.objects.filter(subdivision=subdivision)
+
+    for soldier in soldiers:
+        for prev_name, new_name in soldier_info_fields_names:
+            try:
+                soldier_info = SoldierInfo.objects.get(soldier=soldier, name=prev_name)
+                soldier_info.name = new_name
+                soldier_info.save()
+            except SoldierInfo.DoesNotExist:
+                f'There is no {prev_name} soldier info field name for {soldier}'

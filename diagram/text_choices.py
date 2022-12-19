@@ -1,4 +1,4 @@
-ranks = (
+RANKS = (
     ('szer.', 'szer.'),
     ('st. szer.', 'st. szer.'),
     ('st. szer. spec.', 'st. szer. spec.'),
@@ -20,7 +20,7 @@ ranks = (
     ('gen. bryg.', 'gen. bryg.'),
 )
 
-activity_names = (
+ACTIVITY_NAMES = (
     ('', ''),
     ('SŁ.OF', 'służba oficera'),
     ('SŁ.POM', 'służba pomocnika'),
@@ -46,3 +46,13 @@ activity_names = (
     ('INNE', 'inne'),
     ('HDK', 'HDK'),
 )
+
+DEFAULT_SOLDIER_INFO = [
+    'stanowisko',
+    'PESEL',
+    'imię ojca',
+    'nr leg. sł.',
+    'kat. prawa jazdy',
+]
+
+SOLDIER_INFO_NAME_CHANGE_PREFIX = 'Dotychczasowa nazwa: '

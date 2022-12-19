@@ -11,10 +11,11 @@ from django.utils.timezone import now
 from django.views import generic
 import datetime
 
-from diagram.forms import SoldierForm, ActivityForm, SoldierDetailForm
-from diagram.models import Soldier, Activity
-from diagram.text_choices import activity_names
-from diagram.utilities import activity_conflicts, get_soldier_activities, get_url_params, merge_neighbour_activities
+from diagram.forms import SoldierForm, ActivityForm, SoldierInfoUpdateForm, SoldierInfoNamesUpdateForm
+from diagram.models import Soldier, Activity, SoldierInfo
+from diagram.text_choices import ACTIVITY_NAMES, SOLDIER_INFO_NAME_CHANGE_PREFIX
+from diagram.functions import activity_conflicts, get_soldier_activities, get_url_params, merge_neighbour_activities, \
+    update_soldier_info_names
 
 
 class ShowDiagram(LoginRequiredMixin, generic.View):
@@ -67,7 +68,7 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
             'default_days_count': default_days_count,
             'default_start_day': default_start_day,
             'dates': sorted(dates),
-            'choices': sorted([a[0] for a in activity_names]),
+            'choices': sorted([a[0] for a in ACTIVITY_NAMES]),
         }
 
         return render(request, template_name='diagram/show_diagram.html', context=context)
@@ -147,7 +148,11 @@ class SoldierDetail(LoginRequiredMixin, generic.DetailView):
         context = super(SoldierDetail, self).get_context_data(**kwargs)
 
         context['activities'] = get_soldier_activities(activity_age, soldier=self.get_object())
-        context['soldier_fields'] = SoldierDetailForm(data=model_to_dict(self.get_object()))
+
+        soldier_fields = SoldierInfo.objects.filter(soldier=self.get_object())
+        context['soldier_fields'] = []
+        for soldier_field in soldier_fields:
+            context['soldier_fields'].append({'name': soldier_field.name, 'value': soldier_field.value})
         return context
 
 
@@ -163,7 +168,7 @@ class SoldierUpdate(LoginRequiredMixin, generic.UpdateView):
 
     def form_valid(self, form):
         soldier = form.save()
-        messages.add_message(self.request, messages.SUCCESS, 'Zmodyfikowano dane żołnierza.')
+        messages.add_message(self.request, messages.SUCCESS, 'Zapisano stopień, imię i nazwisko żołnierza.')
         return redirect('soldier-detail', pk=soldier.pk)
 
     def get_queryset(self):
@@ -255,5 +260,51 @@ class ActivityDelete(LoginRequiredMixin, generic.View):
         soldier_pk = activity.soldier.pk
         messages.add_message(request, messages.SUCCESS, f'Usunięto aktywność {activity}')
         activity.delete()
+
+        return redirect('soldier-detail', pk=soldier_pk)
+
+
+class SoldierInfoUpdate(LoginRequiredMixin, generic.View):
+    def get(self, request, soldier_pk):
+        try:
+            soldier = Soldier.objects.get(pk=soldier_pk)
+        except Soldier.DoesNotExist:
+            messages.add_message(request, messages.WARNING, f'Nie znaleziono żołnierza o ID = {soldier_pk}')
+            return redirect('soldier-list')
+
+        context = {
+            'message': soldier,
+            'soldier_pk': soldier_pk,
+            'form': SoldierInfoUpdateForm(soldier_pk=soldier_pk)
+        }
+        return render(request, template_name='diagram/soldier_info_update.html', context=context)
+
+    def post(self, request, soldier_pk):
+        soldier_info = SoldierInfo.objects.filter(soldier_id=soldier_pk)
+        for specific_info in soldier_info:
+            specific_info.value = request.POST[specific_info.name]
+            specific_info.save()
+
+        messages.add_message(self.request, messages.SUCCESS, 'Zapisano dane żołnierza.')
+        return redirect('soldier-detail', pk=soldier_pk)
+
+
+class SoldierInfoNamesUpdate(LoginRequiredMixin, generic.View):
+    def get(self, request, soldier_pk):
+        context = {'message': 'Zmodyfikuj nazwy danych wszystkich żołnierzy w pododdziale.',
+                   'soldier_pk': soldier_pk,
+                   'form': SoldierInfoNamesUpdateForm(soldier_pk=soldier_pk)}
+        return render(request, template_name='diagram/soldier_info_update.html', context=context)
+
+    def post(self, request, soldier_pk):
+        soldier_info_fields_names = []
+        for prev_name, new_name in request.POST.items():
+            if SOLDIER_INFO_NAME_CHANGE_PREFIX in prev_name:
+                soldier_info_fields_names.append((prev_name.replace(SOLDIER_INFO_NAME_CHANGE_PREFIX, ''), new_name))
+
+        subdivision = Soldier.objects.get(pk=soldier_pk).subdivision
+        update_soldier_info_names(subdivision, soldier_info_fields_names)
+        messages.add_message(self.request, messages.SUCCESS,
+                             'Zapisano nazwy danych wszystkich żołnierzy w pododdziale.')
 
         return redirect('soldier-detail', pk=soldier_pk)

@@ -3,11 +3,12 @@
 
 {% block content %}
     <div class="d-flex flex-column align-items-center">
-        <a class="mb-1" href="{{ request.META.HTTP_REFERER }}">
-            <button class="btn btn-outline-primary">Wróć</button>
-        </a>
-
-        <h3>{{ object }}</h3>
+        <div class="d-flex flex-row">
+            <h3>{{ object }}</h3>
+            <a class="mt-0" href="{% url 'soldier-update' object.pk %}">
+                <button class="btn btn-outline-primary mx-1 btn-sm">Edytuj</button>
+            </a>
+        </div>
 
         <form method="get">
             <h5><select name="activity_age" style="border: none; text-align: center;"
@@ -79,16 +80,24 @@
             <tbody>
             {% for field in soldier_fields %}
                 <tr class="d-flex justify-content-center">
-                    <th class="col col-md-1 px-0" scope="row">{{ field.label }}</th>
-                    <td class="col col-md-2 px-0">{{ field.data|default_if_none:'' }}</td>
+                    <th class="col col-md-1 px-0" scope="row">{{ field.name }}</th>
+                    <td class="col col-md-2 px-0">{{ field.value|default_if_none:'' }}</td>
                 </tr>
             {% endfor %}
             </tbody>
+            <tfoot>
+            <tr class="d-flex justify-content-center">
+                <td class="col col-md-1 px-0"><a class="mt-0 mx-2"
+                                                 href="{% url 'soldier-info-names-update' soldier_pk=object.pk %}">
+                    <button class="btn btn-outline-primary">Edytuj nazwy</button>
+                </a></td>
+                <td class="col col-md-2 px-0"><a class="mt-0"
+                                                 href="{% url 'soldier-info-update' soldier_pk=object.pk %}">
+                    <button class="btn btn-outline-primary">Edytuj dane żołnierza</button>
+                </a></td>
+            </tr>
+            </tfoot>
         </table>
-
-        <a class="mt-0" href="{% url 'soldier-update' object.pk %}">
-            <button class="btn btn-outline-primary">Zaktualizuj dane żołnierza</button>
-        </a>
 
         <a class="mt-5" href="{% url 'soldier-delete' object.pk %}">
             <button class="btn btn-outline-danger">Usuń żołnierza</button>
