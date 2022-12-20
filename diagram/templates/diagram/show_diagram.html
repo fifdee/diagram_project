@@ -54,7 +54,8 @@
             {% for day in dates %}
                 <th scope="col"
                     style="text-align: center;
-                            {% if day == today %}background-color: wheat;{% endif %}{% if day.weekday == 6 %}color: crimson{% endif %}">
+                            {% if day == today %}background-color: wheat;{% endif %}
+                            {% if day.weekday == 6 or day in holidays %}color: crimson{% endif %}">
                     {{ day|date:"d M" }}<br>{{ day|date:"D" }}
                 </th>
             {% endfor %}

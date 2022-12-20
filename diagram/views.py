@@ -3,15 +3,17 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import model_to_dict
-from django.http import Http404
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.utils.datastructures import MultiValueDictKeyError
 from django.utils.timezone import now
 from django.views import generic
 import datetime
+import holidays
 
-from diagram.forms import SoldierForm, ActivityForm, SoldierInfoUpdateForm, SoldierInfoNamesUpdateForm
+from diagram.forms import SoldierForm, ActivityForm, SoldierInfoUpdateForm, SoldierInfoNamesUpdateForm, \
+    SoldierInfoAddForm
 from diagram.models import Soldier, Activity, SoldierInfo
 from diagram.text_choices import ACTIVITY_NAMES, SOLDIER_INFO_NAME_CHANGE_PREFIX
 from diagram.functions import activity_conflicts, get_soldier_activities, get_url_params, merge_neighbour_activities, \
@@ -21,6 +23,7 @@ from diagram.functions import activity_conflicts, get_soldier_activities, get_ur
 class ShowDiagram(LoginRequiredMixin, generic.View):
     def get(self, request):
         today = now().date()
+        these_holidays = holidays.Poland(years=[today.year - 1, today.year, today.year + 1]).keys()
         soldiers = Soldier.objects.filter(subdivision=request.user.subdivision).order_by('last_name')
         activities = {}
         dates = set()
@@ -68,6 +71,7 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
             'default_days_count': default_days_count,
             'default_start_day': default_start_day,
             'dates': sorted(dates),
+            'holidays': these_holidays,
             'choices': sorted([a[0] for a in ACTIVITY_NAMES]),
         }
 
@@ -152,7 +156,8 @@ class SoldierDetail(LoginRequiredMixin, generic.DetailView):
         soldier_fields = SoldierInfo.objects.filter(soldier=self.get_object())
         context['soldier_fields'] = []
         for soldier_field in soldier_fields:
-            context['soldier_fields'].append({'name': soldier_field.name, 'value': soldier_field.value})
+            context['soldier_fields'].append(
+                {'name': soldier_field.name, 'value': soldier_field.value, 'pk': soldier_field.pk})
         return context
 
 
@@ -267,7 +272,7 @@ class ActivityDelete(LoginRequiredMixin, generic.View):
 class SoldierInfoUpdate(LoginRequiredMixin, generic.View):
     def get(self, request, soldier_pk):
         try:
-            soldier = Soldier.objects.get(pk=soldier_pk)
+            soldier = Soldier.objects.get(pk=soldier_pk, subdivision=request.user.subdivision)
         except Soldier.DoesNotExist:
             messages.add_message(request, messages.WARNING, f'Nie znaleziono żołnierza o ID = {soldier_pk}')
             return redirect('soldier-list')
@@ -302,9 +307,77 @@ class SoldierInfoNamesUpdate(LoginRequiredMixin, generic.View):
             if SOLDIER_INFO_NAME_CHANGE_PREFIX in prev_name:
                 soldier_info_fields_names.append((prev_name.replace(SOLDIER_INFO_NAME_CHANGE_PREFIX, ''), new_name))
 
-        subdivision = Soldier.objects.get(pk=soldier_pk).subdivision
+        try:
+            subdivision = Soldier.objects.get(pk=soldier_pk, subdivision=request.user.subdivision).subdivision
+        except Soldier.DoesNotExist:
+            raise Http404()
+
         update_soldier_info_names(subdivision, soldier_info_fields_names)
         messages.add_message(self.request, messages.SUCCESS,
-                             'Zapisano nazwy danych wszystkich żołnierzy w pododdziale.')
+                             'Zapisano nazwy danych wszystkich żołnierzy w pododdziale')
 
         return redirect('soldier-detail', pk=soldier_pk)
+
+
+class SoldierInfoAdd(LoginRequiredMixin, generic.CreateView):
+    template_name = 'diagram/soldier_info_add.html'
+    form_class = SoldierInfoAddForm
+
+    def get_context_data(self, **kwargs):
+        context = super(SoldierInfoAdd, self).get_context_data(**kwargs)
+        context['soldier_pk'] = self.kwargs['soldier_pk']
+        return context
+
+    def form_valid(self, form):
+        soldier_info = form.save(commit=False)
+        try:
+            soldier_info.soldier = Soldier.objects.get(pk=self.kwargs['soldier_pk'],
+                                                       subdivision=self.request.user.subdivision)
+        except Soldier.DoesNotExist:
+            raise Http404()
+
+        soldier_info.save()
+
+        # create same data field for other soldiers in the same division
+        same_subdivision_soldiers = Soldier.objects.filter(subdivision=soldier_info.soldier.subdivision).exclude(
+            pk=self.kwargs['soldier_pk'])
+        for soldier in same_subdivision_soldiers:
+            SoldierInfo.objects.create(
+                soldier=soldier,
+                name=soldier_info.name,
+            )
+        messages.add_message(self.request, messages.SUCCESS,
+                             'Dodano nowe pole danych dla wszystkich żołnierzy w pododdziale')
+
+        return redirect('soldier-detail', pk=self.kwargs['soldier_pk'])
+
+
+class SoldierInfoDelete(LoginRequiredMixin, generic.DeleteView):
+    template_name = 'diagram/soldier_info_delete.html'
+    model = SoldierInfo
+
+    def get_queryset(self):
+        return SoldierInfo.objects.filter(soldier__subdivision=self.request.user.subdivision)
+
+    def form_valid(self, form):
+        this_soldier_info = self.get_object()
+        soldier_pk = this_soldier_info.soldier.pk
+
+        # deleting soldier info fields with this soldier info name for other soldiers in the same subdivision
+        same_subdivision_soldiers = Soldier.objects.filter(subdivision=this_soldier_info.soldier.subdivision).exclude(
+            pk=this_soldier_info.soldier.pk)
+        for soldier in same_subdivision_soldiers:
+            try:
+                SoldierInfo.objects.get(soldier=soldier, name=this_soldier_info.name).delete()
+            except SoldierInfo.DoesNotExist:
+                print(f"{soldier} doesn't have {this_soldier_info.name} field")
+
+        this_soldier_info.delete()
+
+        messages.add_message(self.request, messages.SUCCESS, 'Usunięto pole danych.')
+
+        return redirect('soldier-detail', pk=soldier_pk)
+
+    # def get_success_url(self):
+    #     messages.add_message(self.request, messages.SUCCESS, 'Usunięto pole danych.')
+    #     return reverse('soldier-detail', kwargs={'pk': self.get_object().soldier.pk})

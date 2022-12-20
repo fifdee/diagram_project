@@ -1,7 +1,8 @@
 from django.urls import path
 
 from diagram.views import ShowDiagram, SoldierList, SoldierUpdate, SoldierDetail, SoldierCreate, SoldierDelete, \
-    ActivityUpdate, ActivityDelete, ActivityCreate, SoldierInfoUpdate, SoldierInfoNamesUpdate
+    ActivityUpdate, ActivityDelete, ActivityCreate, SoldierInfoUpdate, SoldierInfoNamesUpdate, SoldierInfoAdd, \
+    SoldierInfoDelete
 
 urlpatterns = [
     path('', ShowDiagram.as_view(), name='show-diagram'),
@@ -16,4 +17,6 @@ urlpatterns = [
     path('soldier-info-update/<int:soldier_pk>/', SoldierInfoUpdate.as_view(), name='soldier-info-update'),
     path('soldier-info-names-update/<int:soldier_pk>/', SoldierInfoNamesUpdate.as_view(),
          name='soldier-info-names-update'),
+    path('soldier-info-add/<int:soldier_pk>/', SoldierInfoAdd.as_view(), name='soldier-info-add'),
+    path('soldier-info-delete/<int:pk>/', SoldierInfoDelete.as_view(), name='soldier-info-delete'),
 ]

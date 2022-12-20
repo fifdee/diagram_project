@@ -3,14 +3,14 @@
 
 {% block content %}
     <div class="d-flex flex-column align-items-center">
-        <a class="mb-1" href="{% url 'soldier-detail' object.pk %}">
+        <a class="mb-1" href="{% url 'soldier-detail' object.soldier.pk %}">
             <button class="btn btn-outline-primary">Wróć</button>
         </a>
 
         <form method="post" class="mt-3">
             {% csrf_token %}
-            <p>Czy na pewno chcesz usunąć żołnierza "{{ object.rank }} {{ object.first_name }} {{ object.last_name }}"?
-                Wszystkie jego dane zostaną skasowane.</p>
+            <p>Czy na pewno chcesz usunąć pole danych "{{ object.name }}"?
+                Ww. pole wraz zawartością zostanie skasowane u każdego żołnierza w pododdziale.</p>
 
             <button type="submit" class="btn btn-outline-danger"
                     onclick="this.disabled=true; this.form.submit();">Potwierdź

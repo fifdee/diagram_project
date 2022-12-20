@@ -32,6 +32,12 @@ class SoldierInfoNamesUpdateForm(forms.Form):
                                                                                             initial=field.name)
 
 
+class SoldierInfoAddForm(forms.ModelForm):
+    class Meta:
+        model = SoldierInfo
+        fields = ['name']
+
+
 class ActivityForm(ModelForm):
     class Meta:
         model = Activity

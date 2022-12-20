@@ -31,7 +31,7 @@ class Soldier(models.Model):
 
 class SoldierInfo(models.Model):
     soldier = models.ForeignKey(Soldier, on_delete=models.CASCADE, verbose_name='żołnierz')
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=20, verbose_name='nazwa', unique=True)
     value = models.CharField(max_length=30, default='')
 
 
@@ -47,16 +47,17 @@ class Activity(models.Model):
     def clean(self):
         super(Activity, self).clean()
 
-        if self.end_date < self.start_date:
-            raise ValidationError({'end_date': 'data zakończenia nie może być przed datą rozpoczęcia'})
+        if self.end_date and self.start_date:
+            if self.end_date < self.start_date:
+                raise ValidationError({'end_date': 'data zakończenia nie może być przed datą rozpoczęcia'})
 
-        # validation for specific soldier's activities
-        if self.soldier:
-            conflict = activity_conflicts(self, Activity)
-            if conflict:
-                raise ValidationError(
-                    f'Wybrane daty rozpoczęcia i zakończenia nakładają się z inną aktywnością: {conflict["name"]} '
-                    f'(data rozpoczęcia: {conflict["start_date"]}, data zakończenia: {conflict["end_date"]})')
+            # validation for specific soldier's activities
+            if self.soldier:
+                conflict = activity_conflicts(self, Activity)
+                if conflict:
+                    raise ValidationError(
+                        f'Wybrane daty rozpoczęcia i zakończenia nakładają się z inną aktywnością: {conflict["name"]} '
+                        f'(data rozpoczęcia: {conflict["start_date"]}, data zakończenia: {conflict["end_date"]})')
 
     def __str__(self):
         return f'{self.name} {self.description} ({self.soldier})'

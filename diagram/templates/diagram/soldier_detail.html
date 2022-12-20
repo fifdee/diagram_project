@@ -80,7 +80,12 @@
             <tbody>
             {% for field in soldier_fields %}
                 <tr class="d-flex justify-content-center">
-                    <th class="col col-md-1 px-0" scope="row">{{ field.name }}</th>
+                    <th class="col col-md-2 px-0 d-flex" scope="row">
+                        <a class="mx-2" href="{% url 'soldier-info-delete'  field.pk %}">
+                            <button class="btn btn-outline-danger btn-sm p-1">X</button>
+                        </a>
+                        {{ field.name }}
+                    </th>
                     <td class="col col-md-2 px-0">{{ field.value|default_if_none:'' }}</td>
                 </tr>
             {% endfor %}
@@ -98,6 +103,9 @@
             </tr>
             </tfoot>
         </table>
+        <a class="mt-0" href="{% url 'soldier-info-add' soldier_pk=object.pk %}">
+            <button class="btn btn-outline-primary">Dodaj nowe pole danych</button>
+        </a>
 
         <a class="mt-5" href="{% url 'soldier-delete' object.pk %}">
             <button class="btn btn-outline-danger">Usuń żołnierza</button>
