@@ -53,10 +53,11 @@
             <th scope="col">#</th>
             {% for day in dates %}
                 <th scope="col"
+                    {% if day.1 %}data-bs-toggle="tooltip" data-bs-title="{{ day.1 }}"{% endif %}
                     style="text-align: center;
-                            {% if day == today %}background-color: wheat;{% endif %}
-                            {% if day.weekday == 6 or day in holidays %}color: crimson{% endif %}">
-                    {{ day|date:"d M" }}<br>{{ day|date:"D" }}
+                            {% if day.0 == today %}background-color: wheat;{% endif %}
+                            {% if day.0.weekday == 6 or day.1 %}color: crimson{% endif %}">
+                    {{ day.0|date:"d M" }}<br>{{ day.0|date:"D" }}
                 </th>
             {% endfor %}
         </tr>
@@ -71,7 +72,8 @@
                     </a>
                 </th>
                 {% for activity in days.values %}
-                    <td style="text-align: center">
+                    <td style="text-align: center" {% if activity.description %}data-bs-toggle="tooltip"
+                        data-bs-title="Opis: {{ activity.description }}"{% endif %}>
                         <form action="{% url 'show-diagram' %}" method="POST" id="activities_form">
                             {% csrf_token %}
 
@@ -97,5 +99,5 @@
         {% endfor %}
         </tbody>
     </table>
-
+    </p>
 {% endblock %}

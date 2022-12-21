@@ -23,7 +23,7 @@ from diagram.functions import activity_conflicts, get_soldier_activities, get_ur
 class ShowDiagram(LoginRequiredMixin, generic.View):
     def get(self, request):
         today = now().date()
-        these_holidays = holidays.Poland(years=[today.year - 1, today.year, today.year + 1]).keys()
+        these_holidays = holidays.Poland(years=[today.year - 1, today.year, today.year + 1])
         soldiers = Soldier.objects.filter(subdivision=request.user.subdivision).order_by('last_name')
         activities = {}
         dates = set()
@@ -47,7 +47,7 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
             activities[soldier] = {}
             for j in range(start_day, days_count + start_day):
                 this_date = today + datetime.timedelta(days=j)
-                dates.add(this_date)
+                dates.add((this_date, these_holidays.get(this_date)))
                 activities[soldier][j] = {}
                 activities[soldier][j]['name'] = ''
                 activities[soldier][j]['date'] = this_date.strftime('%d.%m.%Y')
@@ -58,6 +58,7 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
                                                     end_date__gte=this_date)
                     activities[soldier][j]['name'] = activity
                     activities[soldier][j]['pk'] = activity.pk
+                    activities[soldier][j]['description'] = activity.description
                 except Activity.DoesNotExist:
                     pass
                 except Activity.MultipleObjectsReturned:

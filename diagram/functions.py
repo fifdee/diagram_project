@@ -71,14 +71,16 @@ def merge_neighbour_activities(new_activity):
     try:
         left_activity = Activity.objects.get(end_date=new_activity.start_date + datetime.timedelta(days=-1),
                                              soldier=new_activity.soldier,
-                                             name=new_activity.name)
+                                             name=new_activity.name,
+                                             description=new_activity.description)
     except Activity.DoesNotExist:
         print('No "left" activity for the same soldier and same activity name.')
 
     try:
         right_activity = Activity.objects.get(start_date=new_activity.end_date + datetime.timedelta(days=1),
                                               soldier=new_activity.soldier,
-                                              name=new_activity.name)
+                                              name=new_activity.name,
+                                              description=new_activity.description)
     except Activity.DoesNotExist:
         print('No "right" activity for the same soldier nad same activity name.')
 
