@@ -1,4 +1,5 @@
 {% extends 'account/base.html' %}
+{% load bootstrap_icons %}
 {% load crispy_forms_filters %}
 
 {% block content %}
@@ -53,11 +54,12 @@
             <th scope="col">#</th>
             {% for day in dates %}
                 <th scope="col"
-                    {% if day.1 %}data-bs-toggle="tooltip" data-bs-title="{{ day.1 }}"{% endif %}
                     style="text-align: center;
                             {% if day.0 == today %}background-color: wheat;{% endif %}
                             {% if day.0.weekday == 6 or day.1 %}color: crimson{% endif %}">
-                    {{ day.0|date:"d M" }}<br>{{ day.0|date:"D" }}
+                    {{ day.0|date:"d M" }}<br>{% if day.1 %}<a data-bs-toggle="tooltip"
+                                                               data-bs-title="{{ day.1 }}">{% bs_icon 'info-circle' %}
+                </a>{% endif %}{{ day.0|date:"D" }}
                 </th>
             {% endfor %}
         </tr>

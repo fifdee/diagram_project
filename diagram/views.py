@@ -1,3 +1,5 @@
+import time
+
 from django import forms
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -22,6 +24,8 @@ from diagram.functions import activity_conflicts, get_soldier_activities, get_ur
 
 class ShowDiagram(LoginRequiredMixin, generic.View):
     def get(self, request):
+        t_1 = time.time()
+
         today = now().date()
         these_holidays = holidays.Poland(years=[today.year - 1, today.year, today.year + 1])
         soldiers = Soldier.objects.filter(subdivision=request.user.subdivision).order_by('last_name')
@@ -76,6 +80,7 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
             'choices': sorted([a[0] for a in ACTIVITY_NAMES]),
         }
 
+        print(f'time to compute diagram view: {time.time() - t_1} sec.')
         return render(request, template_name='diagram/show_diagram.html', context=context)
 
     def post(self, request):
