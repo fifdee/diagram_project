@@ -52,7 +52,7 @@
                     <td class="col col-md-1 px-0">{{ activity.start_date }}</td>
                     <td class="col col-md-1 px-0">{{ activity.end_date }}</td>
                     <td class="col col-md-1 px-0">
-                        <a href="{% url 'activity-update' activity.pk %}">
+                        <a href="{% url 'activity-update-soldier-bound' activity.pk %}">
                             <button class="btn btn-outline-primary btn-sm">Edytuj</button>
                         </a>
                     </td>
@@ -70,7 +70,7 @@
             </tbody>
         </table>
 
-        <a class="mt-0" href="{% url 'activity-create' soldier_pk=object.pk %}">
+        <a class="mt-0" href="{% url 'activity-create-soldier-bound' soldier_pk=object.pk %}">
             <button class="btn btn-outline-primary">Dodaj aktywność dla tego żołnierza</button>
         </a>
 

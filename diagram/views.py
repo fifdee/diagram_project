@@ -14,12 +14,12 @@ from django.views import generic
 import datetime
 import holidays
 
-from diagram.forms import SoldierForm, ActivityForm, SoldierInfoUpdateForm, SoldierInfoNamesUpdateForm, \
-    SoldierInfoAddForm
+from diagram.forms import SoldierForm, ActivityFormSoldierDisabled, SoldierInfoUpdateForm, SoldierInfoNamesUpdateForm, \
+    SoldierInfoAddForm, ActivityForm
 from diagram.models import Soldier, Activity, SoldierInfo
 from diagram.text_choices import ACTIVITY_NAMES, SOLDIER_INFO_NAME_CHANGE_PREFIX
 from diagram.functions import activity_conflicts, get_soldier_activities, get_url_params, merge_neighbour_activities, \
-    update_soldier_info_names
+    update_soldier_info_names, unassigned_activities_as_string
 
 
 class ShowDiagram(LoginRequiredMixin, generic.View):
@@ -30,7 +30,7 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
         these_holidays = holidays.Poland(years=[today.year - 1, today.year, today.year + 1])
         soldiers = Soldier.objects.filter(subdivision=request.user.subdivision).order_by('last_name')
         activities = {}
-        dates = set()
+        dates = []
 
         default_start_day = -1  # yesterday
         start_day = default_start_day
@@ -47,11 +47,20 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
         if days_count > 20:
             days_count = 20
 
+        unassigned_activities = Activity.objects.filter(subdivision=request.user.subdivision, soldier=None)
+
         for soldier in soldiers:
             activities[soldier] = {}
             for j in range(start_day, days_count + start_day):
                 this_date = today + datetime.timedelta(days=j)
-                dates.add((this_date, these_holidays.get(this_date)))
+
+                this_date_with_info = (this_date, these_holidays.get(this_date),
+                                       unassigned_activities_as_string(
+                                           unassigned_activities.filter(start_date__lte=this_date,
+                                                                        end_date__gte=this_date)))
+                if this_date not in [x[0] for x in dates]:
+                    dates.append(this_date_with_info)
+
                 activities[soldier][j] = {}
                 activities[soldier][j]['name'] = ''
                 activities[soldier][j]['date'] = this_date.strftime('%d.%m.%Y')
@@ -68,6 +77,7 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
                 except Activity.MultipleObjectsReturned:
                     messages.add_message(self.request, messages.WARNING,
                                          f'Konflikt aktywności dla żołnierza: {soldier}')
+        print(dates)
 
         context = {
             'activities': activities,
@@ -75,7 +85,7 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
             'range': range(4, 21),
             'default_days_count': default_days_count,
             'default_start_day': default_start_day,
-            'dates': sorted(dates),
+            'dates': sorted(dates, key=lambda x: x[0]),
             'holidays': these_holidays,
             'choices': sorted([a[0] for a in ACTIVITY_NAMES]),
         }
@@ -213,18 +223,18 @@ class SoldierDelete(LoginRequiredMixin, generic.DeleteView):
         return reverse('soldier-list')
 
 
-class ActivityCreate(LoginRequiredMixin, generic.CreateView):
+class ActivityCreateSoldierBound(LoginRequiredMixin, generic.CreateView):
     model = Activity
     template_name = 'diagram/activity_create.html'
 
     def get_context_data(self, **kwargs):
-        context = super(ActivityCreate, self).get_context_data(**kwargs)
+        context = super(ActivityCreateSoldierBound, self).get_context_data(**kwargs)
         soldier = get_object_or_404(Soldier, pk=self.kwargs['soldier_pk'])
         context['soldier_pk'] = soldier.pk
         return context
 
     def get_form(self, form_class=None):
-        form = super(ActivityCreate, self).get_form(form_class=ActivityForm)
+        form = super(ActivityCreateSoldierBound, self).get_form(form_class=ActivityFormSoldierDisabled)
         soldier = get_object_or_404(Soldier, pk=self.kwargs['soldier_pk'])
         form.fields['soldier'].initial = soldier
         form.fields['start_date'].widget = forms.widgets.DateInput(attrs={'type': 'date'})
@@ -240,12 +250,31 @@ class ActivityCreate(LoginRequiredMixin, generic.CreateView):
         return redirect('soldier-detail', pk=self.kwargs['soldier_pk'])
 
 
-class ActivityUpdate(LoginRequiredMixin, generic.UpdateView):
+class ActivityCreate(LoginRequiredMixin, generic.CreateView):
+    model = Activity
+    template_name = 'diagram/activity_create.html'
+
+    def get_form(self, form_class=None):
+        form = super(ActivityCreate, self).get_form(form_class=ActivityForm)
+        form.fields['start_date'].widget = forms.widgets.DateInput(attrs={'type': 'date'})
+        form.fields['end_date'].widget = forms.widgets.DateInput(attrs={'type': 'date'})
+        return form
+
+    def form_valid(self, form):
+        activity = form.save(commit=False)
+        activity.subdivision = self.request.user.subdivision
+        activity.save()
+        messages.add_message(self.request, messages.SUCCESS, f'Dodano aktywność: {activity}')
+
+        return redirect('activity-unassigned-list')
+
+
+class ActivityUpdateSoldierBound(LoginRequiredMixin, generic.UpdateView):
     template_name = 'diagram/activity_update.html'
-    form_class = ActivityForm
+    form_class = ActivityFormSoldierDisabled
 
     def get_context_data(self, **kwargs):
-        context = super(ActivityUpdate, self).get_context_data(**kwargs)
+        context = super(ActivityUpdateSoldierBound, self).get_context_data(**kwargs)
         soldier = get_object_or_404(Soldier, pk=self.get_object().soldier.pk)
         context['soldier_pk'] = soldier.pk
         return context
@@ -261,6 +290,20 @@ class ActivityUpdate(LoginRequiredMixin, generic.UpdateView):
         return Activity.objects.filter(subdivision=self.request.user.subdivision)
 
 
+class ActivityUpdate(LoginRequiredMixin, generic.UpdateView):
+    template_name = 'diagram/activity_update.html'
+    form_class = ActivityForm
+
+    def form_valid(self, form):
+        activity = form.save()
+        messages.add_message(self.request, messages.SUCCESS, f'Zmodyfikowano aktywność: {activity}')
+
+        return redirect('activity-unassigned-list')
+
+    def get_queryset(self):
+        return Activity.objects.filter(subdivision=self.request.user.subdivision)
+
+
 class ActivityDelete(LoginRequiredMixin, generic.View):
     def get(self, request, pk):
         try:
@@ -268,11 +311,14 @@ class ActivityDelete(LoginRequiredMixin, generic.View):
         except Activity.DoesNotExist:
             raise Http404()
 
-        soldier_pk = activity.soldier.pk
-        messages.add_message(request, messages.SUCCESS, f'Usunięto aktywność {activity}')
         activity.delete()
+        messages.add_message(request, messages.SUCCESS, f'Usunięto aktywność {activity}')
 
-        return redirect('soldier-detail', pk=soldier_pk)
+        if activity.soldier:
+            soldier_pk = activity.soldier.pk
+            return redirect('soldier-detail', pk=soldier_pk)
+        else:
+            return redirect('activity-unassigned-list')
 
 
 class SoldierInfoUpdate(LoginRequiredMixin, generic.View):
@@ -384,6 +430,11 @@ class SoldierInfoDelete(LoginRequiredMixin, generic.DeleteView):
 
         return redirect('soldier-detail', pk=soldier_pk)
 
-    # def get_success_url(self):
-    #     messages.add_message(self.request, messages.SUCCESS, 'Usunięto pole danych.')
-    #     return reverse('soldier-detail', kwargs={'pk': self.get_object().soldier.pk})
+
+class ActivityUnassignedList(LoginRequiredMixin, generic.ListView):
+    template_name = 'diagram/activity_unassigned_list.html'
+
+    def get_queryset(self):
+        unassigned_activities = Activity.objects.filter(subdivision=self.request.user.subdivision,
+                                                        soldier=None)
+        return unassigned_activities

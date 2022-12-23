@@ -38,11 +38,17 @@ class SoldierInfoAddForm(forms.ModelForm):
         fields = ['name']
 
 
-class ActivityForm(ModelForm):
+class ActivityFormSoldierDisabled(ModelForm):
     class Meta:
         model = Activity
         exclude = ['subdivision']
 
     def __init__(self, *args, **kwargs):
-        super(ActivityForm, self).__init__(*args, **kwargs)
+        super(ActivityFormSoldierDisabled, self).__init__(*args, **kwargs)
         self.fields['soldier'].disabled = True
+
+
+class ActivityForm(ModelForm):
+    class Meta:
+        model = Activity
+        exclude = ['subdivision']

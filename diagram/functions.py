@@ -1,4 +1,3 @@
-
 def activity_conflicts(activity, activity_class):
     soldier = activity.soldier
     subdivision = soldier.subdivision
@@ -113,3 +112,18 @@ def update_soldier_info_names(subdivision, soldier_info_fields_names):
                 soldier_info.save()
             except SoldierInfo.DoesNotExist:
                 f'There is no {prev_name} soldier info field name for {soldier}'
+
+
+def unassigned_activities_as_string(unassigned_activities):
+    output_string = ''
+    i = 1
+    if unassigned_activities.count() > 0:
+        output_string += 'Nieprzypisane: '
+    for act in unassigned_activities:
+        if act.description != '':
+            output_string += f'{i}. {act.name} ({act.description})'
+        else:
+            output_string += f'{i}. {act.name}'
+        output_string += '; \n'
+        i += 1
+    return output_string

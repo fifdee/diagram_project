@@ -3,7 +3,7 @@
 
 {% block content %}
     <div class="d-flex flex-column align-items-center">
-        <a class="mb-1" href="{% url 'soldier-detail' soldier_pk %}">
+        <a class="mb-1" href="{{ request.META.HTTP_REFERER }}">
             <button class="btn btn-outline-primary">Wróć</button>
         </a>
 
