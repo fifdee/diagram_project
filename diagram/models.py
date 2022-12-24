@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import pre_save, post_save
 
 from diagram.text_choices import RANKS, ACTIVITY_NAMES, DEFAULT_SOLDIER_INFO
-from diagram.functions import activity_conflicts, merge_neighbour_activities
+from diagram.functions import activity_conflicts, merge_neighbour_activities, assign_if_check_passed
 
 
 class User(AbstractUser):
@@ -40,12 +40,15 @@ class Activity(models.Model):
     name = models.CharField(max_length=30, choices=ACTIVITY_NAMES, verbose_name='nazwa')
     description = models.CharField(max_length=200, default='', blank=True, verbose_name='opis')
     start_date = models.DateField(verbose_name='data rozpoczęcia')
-    end_date = models.DateField(verbose_name='data zakończenia')
+    end_date = models.DateField(verbose_name='data zakończenia', blank=True)
     subdivision = models.ForeignKey(Subdivision, on_delete=models.SET_NULL, null=True, blank=True,
                                     verbose_name='pododdział')
 
     def clean(self):
         super(Activity, self).clean()
+
+        if self.start_date and not self.end_date:
+            self.end_date = self.start_date
 
         if self.end_date and self.start_date:
             if self.end_date < self.start_date:
@@ -63,11 +66,18 @@ class Activity(models.Model):
         return f'{self.name} {self.description} ({self.soldier})'
 
 
-def launch_merge_neighbour_activities(sender, instance, **kwargs):
+def check_for_assign(sender, instance, **kwargs):
+    assign_if_check_passed(instance)
+
+
+pre_save.connect(check_for_assign, sender=Activity)
+
+
+def check_for_merge(sender, instance, **kwargs):
     merge_neighbour_activities(instance)
 
 
-post_save.connect(launch_merge_neighbour_activities, sender=Activity)
+post_save.connect(check_for_merge, sender=Activity)
 
 
 def set_username(sender, instance, **kwargs):

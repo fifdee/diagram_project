@@ -99,6 +99,16 @@ def merge_neighbour_activities(new_activity):
         left_activity.save()
 
 
+def assign_if_check_passed(new_instance):
+    from diagram.models import Activity
+    unassigned_activities = Activity.objects.filter(subdivision=new_instance.subdivision, soldier=None,
+                                                    start_date=new_instance.start_date, end_date=new_instance.end_date,
+                                                    name=new_instance.name)
+    for unass_act in unassigned_activities:
+        new_instance.description = unass_act.description
+        unass_act.delete()
+
+
 def update_soldier_info_names(subdivision, soldier_info_fields_names):
     from diagram.models import Soldier, SoldierInfo
 
