@@ -47,6 +47,18 @@ ACTIVITY_NAMES = (
     ('HDK', 'HDK'),
 )
 
+EVERYDAY_ACTIVITY_NAMES = (
+    ('SŁ.OF', 'służba oficera'),
+    ('SŁ.POM', 'służba pomocnika'),
+    ('SŁ.PDF', 'służba podoficera'),
+    ('SŁ.DYŻ', 'służba dyżurnego'),
+    ('SŁ.PST', 'służba PST'),
+    ('SŁ.PKT', 'służba PKT'),
+    ('PA GAR', 'służba PA garnizonu'),
+    ('PA JW', 'służba PA JW'),
+    ('OKO', 'OKO'),
+)
+
 DEFAULT_SOLDIER_INFO = [
     'stanowisko',
     'PESEL',

@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import ModelForm
 
-from diagram.models import Soldier, Activity, SoldierInfo
+from diagram.models import Soldier, Activity, SoldierInfo, EverydayActivity
 from diagram.text_choices import SOLDIER_INFO_NAME_CHANGE_PREFIX
 
 
@@ -51,4 +51,10 @@ class ActivityFormSoldierDisabled(ModelForm):
 class ActivityForm(ModelForm):
     class Meta:
         model = Activity
+        exclude = ['subdivision']
+
+
+class EverydayActivityForm(ModelForm):
+    class Meta:
+        model = EverydayActivity
         exclude = ['subdivision']

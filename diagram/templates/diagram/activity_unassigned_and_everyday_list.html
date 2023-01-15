@@ -20,7 +20,7 @@
             </tr>
             </thead>
             <tbody>
-            {% for activity in object_list %}
+            {% for activity in unassigned_activities %}
                 <tr class="d-flex justify-content-center">
                     <th class="col col-md-1 px-0" scope="row">{{ forloop.counter }}</th>
                     <td class="col col-md-1 px-0">{{ activity.name }}</td>
@@ -51,6 +51,49 @@
         </a>
     </div>
 
+    <div class="d-flex flex-column align-items-center mt-5">
+        <h3>Lista codziennych aktywności:</h3>
+
+
+        <table class="table">
+            <thead>
+            <tr class="d-flex justify-content-center">
+                <th class="col col-md-1 px-0" scope="col">#</th>
+                <th class="col col-md-1 px-0" scope="col">nazwa</th>
+                <th class="col col-md-1 px-0" scope="col">ile dziennie</th>
+                <th class="col col-md-1 px-0" scope="col">edycja</th>
+                <th class="col col-md-1 px-0" scope="col">usunięcie</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for activity in everyday_activities %}
+                <tr class="d-flex justify-content-center">
+                    <th class="col col-md-1 px-0" scope="row">{{ forloop.counter }}</th>
+                    <td class="col col-md-1 px-0">{{ activity.name }}</td>
+                    <td class="col col-md-1 px-0">{{ activity.how_many }}</td>
+                    <td class="col col-md-1 px-0">
+                        <a href="{% url 'everyday-activity-update' activity.pk %}">
+                            <button class="btn btn-outline-primary btn-sm">Edytuj</button>
+                        </a>
+                    </td>
+                    <td class="col col-md-1 px-0">
+                        <a href="{% url 'everyday-activity-delete' activity.pk %}">
+                            <button class="btn btn-outline-danger btn-sm">Usuń</button>
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr class="d-flex justify-content-center">
+                    <td class="col col-md-7 px-0">Brak codziennych aktywności</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <a class="mt-0" href="{% url 'everyday-activity-create' %}">
+            <button class="btn btn-outline-primary">Dodaj codzienną aktywność</button>
+        </a>
+    </div>
 
 
 {% endblock %}

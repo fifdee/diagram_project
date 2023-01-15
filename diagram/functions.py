@@ -1,3 +1,20 @@
+from django.core.exceptions import ValidationError
+
+
+def validate_how_many_everyday_activities(value):
+    print(f'value: {value}')
+    if value < 1 or value > 50:
+        print('raising')
+        raise ValidationError('Podaj wartość od 1 do 50.')
+
+def everyday_activity_conflicts(activity, everyday_activity_class):
+    for current_activity in everyday_activity_class.objects.filter(subdivision=activity.subdivision):
+        if activity.pk != current_activity.pk:
+            if current_activity.name == activity.name:
+                return True
+    return None
+
+
 def activity_conflicts(activity, activity_class):
     soldier = activity.soldier
     subdivision = soldier.subdivision
@@ -134,6 +151,29 @@ def unassigned_activities_as_string(unassigned_activities):
             output_string += f'{i}. {act.name} ({act.description})'
         else:
             output_string += f'{i}. {act.name}'
+        output_string += '; \n'
+        i += 1
+    return output_string
+
+
+def everyday_activities_as_string(everyday_activities, this_day_activities):
+    activities_to_assign = [{'name': act.name, 'count': act.how_many} for act in everyday_activities]
+
+    for this_day_act in this_day_activities:
+        for act_to_assign in activities_to_assign:
+            if this_day_act.name == act_to_assign['name']:
+                if act_to_assign['count'] > 1:
+                    act_to_assign['count'] -= 1
+                else:
+                    activities_to_assign.remove(act_to_assign)
+
+
+    output_string = ''
+    i = 1
+    if len(activities_to_assign) > 0:
+        output_string += 'Codzienne aktywności do przypisania: '
+    for act in activities_to_assign:
+        output_string += f"{i}. {act['name']} x{act['count']}"
         output_string += '; \n'
         i += 1
     return output_string

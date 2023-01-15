@@ -15,11 +15,12 @@ import datetime
 import holidays
 
 from diagram.forms import SoldierForm, ActivityFormSoldierDisabled, SoldierInfoUpdateForm, SoldierInfoNamesUpdateForm, \
-    SoldierInfoAddForm, ActivityForm
-from diagram.models import Soldier, Activity, SoldierInfo
+    SoldierInfoAddForm, ActivityForm, EverydayActivityForm
+from diagram.models import Soldier, Activity, SoldierInfo, EverydayActivity
 from diagram.text_choices import ACTIVITY_NAMES, SOLDIER_INFO_NAME_CHANGE_PREFIX
 from diagram.functions import activity_conflicts, get_soldier_activities, get_url_params, merge_neighbour_activities, \
-    update_soldier_info_names, unassigned_activities_as_string
+    update_soldier_info_names, unassigned_activities_as_string, everyday_activity_conflicts, \
+    everyday_activities_as_string
 
 
 class ShowDiagram(LoginRequiredMixin, generic.View):
@@ -48,16 +49,24 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
             days_count = 20
 
         unassigned_activities = Activity.objects.filter(subdivision=request.user.subdivision, soldier=None)
+        everyday_activities = EverydayActivity.objects.filter(subdivision=request.user.subdivision)
 
         for soldier in soldiers:
             activities[soldier] = {}
             for j in range(start_day, days_count + start_day):
                 this_date = today + datetime.timedelta(days=j)
 
+                this_day_activities = Activity.objects.filter(subdivision=request.user.subdivision,
+                                                              start_date__lte=this_date,
+                                                              end_date__gte=this_date)
+
                 this_date_with_info = (this_date, these_holidays.get(this_date),
                                        unassigned_activities_as_string(
-                                           unassigned_activities.filter(start_date__lte=this_date,
-                                                                        end_date__gte=this_date)))
+                                           unassigned_activities.filter(subdivision=request.user.subdivision,
+                                                                        start_date__lte=this_date,
+                                                                        end_date__gte=this_date))
+                                       + everyday_activities_as_string(everyday_activities, this_day_activities)
+                                       )
                 if this_date not in [x[0] for x in dates]:
                     dates.append(this_date_with_info)
 
@@ -266,7 +275,25 @@ class ActivityCreate(LoginRequiredMixin, generic.CreateView):
         activity.save()
         messages.add_message(self.request, messages.SUCCESS, f'Dodano aktywność: {activity}')
 
-        return redirect('activity-unassigned-list')
+        return redirect('activity-unassigned-and-everyday-list')
+
+
+class EverydayActivityCreate(LoginRequiredMixin, generic.CreateView):
+    model = EverydayActivity
+    template_name = 'diagram/activity_create.html'
+    fields = ['name', 'how_many']
+
+    def form_valid(self, form):
+        everyday_activity = form.save(commit=False)
+        everyday_activity.subdivision = self.request.user.subdivision
+        conflicts = everyday_activity_conflicts(everyday_activity, EverydayActivity)
+        if conflicts:
+            form.add_error('name', 'Już istnieje codzienna aktywność tego typu.')
+            return super().form_invalid(form)
+        everyday_activity.save()
+        messages.add_message(self.request, messages.SUCCESS, f'Dodano codzienną aktywność: {everyday_activity}')
+
+        return redirect('activity-unassigned-and-everyday-list')
 
 
 class ActivityUpdateSoldierBound(LoginRequiredMixin, generic.UpdateView):
@@ -298,10 +325,29 @@ class ActivityUpdate(LoginRequiredMixin, generic.UpdateView):
         activity = form.save()
         messages.add_message(self.request, messages.SUCCESS, f'Zmodyfikowano aktywność: {activity}')
 
-        return redirect('activity-unassigned-list')
+        return redirect('activity-unassigned-and-everyday-list')
 
     def get_queryset(self):
         return Activity.objects.filter(subdivision=self.request.user.subdivision)
+
+
+class EverydayActivityUpdate(LoginRequiredMixin, generic.UpdateView):
+    template_name = 'diagram/activity_update.html'
+    form_class = EverydayActivityForm
+
+    def form_valid(self, form):
+        everyday_activity = form.save(commit=False)
+        conflicts = everyday_activity_conflicts(everyday_activity, EverydayActivity)
+        if conflicts:
+            form.add_error('name', 'Już istnieje codzienna aktywność tego typu.')
+            return super().form_invalid(form)
+        everyday_activity.save()
+        messages.add_message(self.request, messages.SUCCESS, f'Zmodyfikowano codzienną aktywność: {everyday_activity}')
+
+        return redirect('activity-unassigned-and-everyday-list')
+
+    def get_queryset(self):
+        return EverydayActivity.objects.filter(subdivision=self.request.user.subdivision)
 
 
 class ActivityDelete(LoginRequiredMixin, generic.View):
@@ -318,7 +364,20 @@ class ActivityDelete(LoginRequiredMixin, generic.View):
             soldier_pk = activity.soldier.pk
             return redirect('soldier-detail', pk=soldier_pk)
         else:
-            return redirect('activity-unassigned-list')
+            return redirect('activity-unassigned-and-everyday-list')
+
+
+class EverydayActivityDelete(LoginRequiredMixin, generic.View):
+    def get(self, request, pk):
+        try:
+            everyday_activity = EverydayActivity.objects.get(pk=pk, subdivision=request.user.subdivision)
+        except Activity.DoesNotExist:
+            raise Http404()
+
+        everyday_activity.delete()
+        messages.add_message(request, messages.SUCCESS, f'Usunięto codzienną aktywność {everyday_activity}')
+
+        return redirect('activity-unassigned-and-everyday-list')
 
 
 class SoldierInfoUpdate(LoginRequiredMixin, generic.View):
@@ -431,10 +490,10 @@ class SoldierInfoDelete(LoginRequiredMixin, generic.DeleteView):
         return redirect('soldier-detail', pk=soldier_pk)
 
 
-class ActivityUnassignedList(LoginRequiredMixin, generic.ListView):
-    template_name = 'diagram/activity_unassigned_list.html'
-
-    def get_queryset(self):
-        unassigned_activities = Activity.objects.filter(subdivision=self.request.user.subdivision,
-                                                        soldier=None)
-        return unassigned_activities
+class ActivityUnassignedAndEverydayList(LoginRequiredMixin, generic.View):
+    def get(self, request):
+        context = {
+            'unassigned_activities': Activity.objects.filter(subdivision=self.request.user.subdivision, soldier=None),
+            'everyday_activities': EverydayActivity.objects.filter(subdivision=self.request.user.subdivision)
+        }
+        return render(request, 'diagram/activity_unassigned_and_everyday_list.html', context)

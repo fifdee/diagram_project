@@ -59,7 +59,7 @@
                             {% if day.0.weekday == 6 or day.1 %}color: crimson{% endif %}">
                     {{ day.0|date:"d M" }}<br>{% if day.1 %}<a data-bs-toggle="tooltip"
                                                                data-bs-title="{{ day.1 }}">{% bs_icon 'info-circle' %}
-                </a>{% endif %}{{ day.0|date:"D" }}{% if day.2 %} <a href="{% url 'activity-unassigned-list' %}" data-bs-toggle="tooltip"
+                </a>{% endif %}{{ day.0|date:"D" }}{% if day.2 %} <a href="{% url 'activity-unassigned-and-everyday-list' %}" data-bs-toggle="tooltip"
                                                                data-bs-title="{{ day.2 }}">{% bs_icon 'exclamation-triangle-fill' color='red' %}
                 </a>{% endif %}
                 </th>

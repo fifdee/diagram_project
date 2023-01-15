@@ -3,8 +3,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import pre_save, post_save
 
-from diagram.text_choices import RANKS, ACTIVITY_NAMES, DEFAULT_SOLDIER_INFO
-from diagram.functions import activity_conflicts, merge_neighbour_activities, assign_if_check_passed
+from diagram.text_choices import RANKS, ACTIVITY_NAMES, DEFAULT_SOLDIER_INFO, EVERYDAY_ACTIVITY_NAMES
+from diagram.functions import activity_conflicts, merge_neighbour_activities, assign_if_check_passed, \
+    everyday_activity_conflicts, validate_how_many_everyday_activities
 
 
 class User(AbstractUser):
@@ -31,7 +32,7 @@ class Soldier(models.Model):
 
 class SoldierInfo(models.Model):
     soldier = models.ForeignKey(Soldier, on_delete=models.CASCADE, verbose_name='żołnierz')
-    name = models.CharField(max_length=20, verbose_name='nazwa', unique=True)
+    name = models.CharField(max_length=20, verbose_name='nazwa')
     value = models.CharField(max_length=30, default='')
 
 
@@ -64,6 +65,16 @@ class Activity(models.Model):
 
     def __str__(self):
         return f'{self.name} {self.description} ({self.soldier})'
+
+
+class EverydayActivity(models.Model):
+    name = models.CharField(max_length=30, choices=EVERYDAY_ACTIVITY_NAMES, verbose_name='nazwa')
+    how_many = models.IntegerField(verbose_name='ile dziennie', default=1, validators=[validate_how_many_everyday_activities])
+    subdivision = models.ForeignKey(Subdivision, on_delete=models.SET_NULL, null=True, blank=True,
+                                    verbose_name='pododdział')
+
+    def __str__(self):
+        return self.name
 
 
 def check_for_assign(sender, instance, **kwargs):
