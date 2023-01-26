@@ -14,6 +14,7 @@ from django.views import generic
 import datetime
 import holidays
 
+from activity_colors.models import ActivityColor
 from diagram.forms import SoldierForm, ActivityFormSoldierDisabled, SoldierInfoUpdateForm, SoldierInfoNamesUpdateForm, \
     SoldierInfoAddForm, ActivityForm, EverydayActivityForm
 from diagram.models import Soldier, Activity, SoldierInfo, EverydayActivity
@@ -81,6 +82,15 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
                     activities[soldier][j]['name'] = activity
                     activities[soldier][j]['pk'] = activity.pk
                     activities[soldier][j]['description'] = activity.description
+
+                    try:
+                        activities[soldier][j]['color'] = ActivityColor.objects.get(
+                            activity_name=activity.get_name_display()).color_hex
+                    except ActivityColor.DoesNotExist:
+                        messages.add_message(self.request, messages.WARNING,
+                                             f'Nie udało się pobrać danych koloru dla aktywności:'
+                                             f' {activity.get_name_display()}')
+
                 except Activity.DoesNotExist:
                     pass
                 except Activity.MultipleObjectsReturned:

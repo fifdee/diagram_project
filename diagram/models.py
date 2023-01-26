@@ -3,7 +3,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import pre_save, post_save
 
-from diagram.text_choices import RANKS, ACTIVITY_NAMES, DEFAULT_SOLDIER_INFO, EVERYDAY_ACTIVITY_NAMES
+from diagram.text_choices import RANKS, ACTIVITY_NAMES, DEFAULT_SOLDIER_INFO, EVERYDAY_ACTIVITY_NAMES, DEFAULT_COLOR
 from diagram.functions import activity_conflicts, merge_neighbour_activities, assign_if_check_passed, \
     everyday_activity_conflicts, validate_how_many_everyday_activities
 
@@ -66,9 +66,8 @@ class Activity(models.Model):
     def __str__(self):
         return f'{self.name} {self.description} ({self.soldier})'
 
-
 class EverydayActivity(models.Model):
-    name = models.CharField(max_length=30, choices=EVERYDAY_ACTIVITY_NAMES, verbose_name='nazwa')
+    name = models.CharField(max_length=30, verbose_name='nazwa')
     how_many = models.IntegerField(verbose_name='ile dziennie', default=1, validators=[validate_how_many_everyday_activities])
     subdivision = models.ForeignKey(Subdivision, on_delete=models.SET_NULL, null=True, blank=True,
                                     verbose_name='pododdział')

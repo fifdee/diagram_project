@@ -47,6 +47,32 @@ ACTIVITY_NAMES = (
     ('HDK', 'HDK'),
 )
 
+DEFAULT_COLOR = {
+    'SŁ.OF': '#D4D4D4',
+    'SŁ.POM': '#D4D4D4',
+    'SŁ.PDF': '#D4D4D4',
+    'SŁ.DYŻ': '#D4D4D4',
+    'SŁ.PST': '#D4D4D4',
+    'SŁ.PKT': '#D4D4D4',
+    'PA GAR': '#D4D4D4',
+    'PA JW': '#D4D4D4',
+    'PO SŁ.': '#D4D4D4',
+    'DYŻUR': '#A89AF6',
+    'OKO': '#A89AF6',
+    'UR.WYP': '#F6E19A',
+    'UR.DOD': '#F6E19A',
+    'UR.OK': '#F6E19A',
+    'UR.OJC': '#F6E19A',
+    'UR.WYC': '#F6E19A',
+    'UR.SZK': '#F6E19A',
+    'WOLNE': '#F6E19A',
+    'POLIG': '#9AD6F6',
+    'KURS': '#FFB39F',
+    'L4': '#FFFF96',
+    'INNE': '#96FBFF',
+    'HDK': '#FF96EE',
+}
+
 EVERYDAY_ACTIVITY_NAMES = (
     ('SŁ.OF', 'służba oficera'),
     ('SŁ.POM', 'służba pomocnika'),

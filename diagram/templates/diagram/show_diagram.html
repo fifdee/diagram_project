@@ -1,6 +1,6 @@
 {% extends 'account/base.html' %}
-{% load bootstrap_icons %}
 {% load crispy_forms_filters %}
+{% load static %}
 
 {% block content %}
 
@@ -58,9 +58,9 @@
                             {% if day.0 == today %}background-color: wheat;{% endif %}
                             {% if day.0.weekday == 6 or day.1 %}color: crimson{% endif %}">
                     {{ day.0|date:"d M" }}<br>{% if day.1 %}<a data-bs-toggle="tooltip"
-                                                               data-bs-title="{{ day.1 }}">{% bs_icon 'info-circle' %}
+                                                               data-bs-title="{{ day.1 }}"><img src="{% static 'icons/info.svg' %}" height="20px">
                 </a>{% endif %}{{ day.0|date:"D" }}{% if day.2 %} <a href="{% url 'activity-unassigned-and-everyday-list' %}" data-bs-toggle="tooltip"
-                                                               data-bs-title="{{ day.2 }}">{% bs_icon 'exclamation-triangle-fill' color='red' %}
+                                                               data-bs-title="{{ day.2 }}"><img src="{% static 'icons/excl.svg' %}" height="20px">
                 </a>{% endif %}
                 </th>
             {% endfor %}
@@ -76,7 +76,8 @@
                     </a>
                 </th>
                 {% for activity in days.values %}
-                    <td style="text-align: center" {% if activity.description %}data-bs-toggle="tooltip"
+                    <td style="text-align: center; background-color: {{ activity.color }}"
+                        {% if activity.description %}data-bs-toggle="tooltip"
                         data-bs-title="Opis: {{ activity.description }}"{% endif %}>
                         <form action="{% url 'show-diagram' %}" method="POST" id="activities_form">
                             {% csrf_token %}
@@ -89,7 +90,8 @@
                             <input type="hidden" name="start_day" value="{{ request.GET.start_day }}"/>
                             <input type="hidden" name="days_count" value="{{ request.GET.days_count }}"/>
 
-                            <select name="activity_new" style="width: min-content; border: none;"
+                            <select name="activity_new" style="width: min-content; border: none;
+                            background-color: {{ activity.color }}"
                                     onchange="this.form.submit()">
                                 {% for choice in choices %}
                                     <option {% if activity.name.name == choice %}selected{% endif %} class="small"
