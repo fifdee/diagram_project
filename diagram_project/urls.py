@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('', include('diagram.urls')),
+    path('activity-colors/', include('activity_colors.urls')),
 ]

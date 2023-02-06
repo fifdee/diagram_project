@@ -109,7 +109,7 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
             'choices': sorted([a[0] for a in ACTIVITY_NAMES]),
         }
 
-        print(f'time to compute diagram view: {time.time() - t_1} sec.')
+        # print(f'time to compute diagram view: {time.time() - t_1} sec.')
         return render(request, template_name='diagram/show_diagram.html', context=context)
 
     def post(self, request):
