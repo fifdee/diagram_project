@@ -24,7 +24,7 @@
                             <a class="nav-link" href="{% url 'activity-unassigned-and-everyday-list' %}"><h3>Aktywności</h3></a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href=""><h3>Statystyki</h3></a>
+                            <a class="nav-link" href="{% url 'statistics' %}"><h3>Statystyki</h3></a>
                         </li>
                         {% if request.user.is_authenticated %}
                             <li class="nav-item">

@@ -22,4 +22,5 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('', include('diagram.urls')),
     path('activity-colors/', include('activity_colors.urls')),
+    path('soldiers-statistics/', include('soldiers_statistics.urls')),
 ]

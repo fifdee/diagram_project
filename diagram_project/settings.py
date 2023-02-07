@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'diagram.apps.DiagramConfig',
     'activity_colors.apps.ActivityColorsConfig',
+    'soldiers_statistics.apps.SoldiersStatisticsConfig',
 
     'allauth',
     'allauth.account',

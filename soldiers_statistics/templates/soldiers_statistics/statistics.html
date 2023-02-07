@@ -1,0 +1,37 @@
+{% extends 'account/base.html' %}
+{% load crispy_forms_filters %}
+
+{% block content %}
+
+    <table class="table">
+        <thead>
+        <tr class="d-flex justify-content-center">
+            <th class="col col-md-1 px-0" scope="col">#</th>
+            <th class="col col-md-2 px-0" scope="col">nazwisko, imię, stopień</th>
+            <th class="col col-md-1 px-0" scope="col">L4</th>
+            <th class="col col-md-1 px-0" scope="col">Dyżury</th>
+            <th class="col col-md-1 px-0" scope="col">Służby</th>
+            <th class="col col-md-1 px-0" scope="col">HDK</th>
+            <th class="col col-md-1 px-0" scope="col">Urlopy i wolne</th>
+            <th class="col col-md-1 px-0" scope="col">Kursy</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for soldier in statistics %}
+            <tr class="d-flex justify-content-center">
+                <th class="col col-md-1 px-0" scope="row">{{ forloop.counter }}</th>
+                <td class="col col-md-2 px-0">
+                    <a class="text-decoration-none text-dark" href="{% url 'soldier-detail' soldier.pk %}">
+                        {{ soldier.last_name }} {{ soldier.first_name }} ({{ soldier.rank }})</a></td>
+                <td class="col col-md-1 px-0">{{ soldier.L4 }}</td>
+                <td class="col col-md-1 px-0">{{ soldier.Dyżury }}</td>
+                <td class="col col-md-1 px-0">{{ soldier.Służby }}</td>
+                <td class="col col-md-1 px-0">{{ soldier.HDK }}</td>
+                <td class="col col-md-1 px-0">{{ soldier.Urlopy }}</td>
+                <td class="col col-md-1 px-0">{{ soldier.Kursy }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
