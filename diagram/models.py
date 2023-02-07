@@ -38,7 +38,7 @@ class SoldierInfo(models.Model):
 
 class Activity(models.Model):
     soldier = models.ForeignKey(Soldier, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='żołnierz')
-    name = models.CharField(max_length=30, choices=ACTIVITY_NAMES, verbose_name='nazwa')
+    name = models.CharField(max_length=30, choices=sorted(ACTIVITY_NAMES, key=lambda x: x[1].lower()), verbose_name='nazwa')
     description = models.CharField(max_length=200, default='', blank=True, verbose_name='opis')
     start_date = models.DateField(verbose_name='data rozpoczęcia')
     end_date = models.DateField(verbose_name='data zakończenia', blank=True)
@@ -67,7 +67,7 @@ class Activity(models.Model):
         return f'{self.name} {self.description} ({self.soldier})'
 
 class EverydayActivity(models.Model):
-    name = models.CharField(max_length=30, verbose_name='nazwa')
+    name = models.CharField(max_length=30, choices=EVERYDAY_ACTIVITY_NAMES, verbose_name='nazwa')
     how_many = models.IntegerField(verbose_name='ile dziennie', default=1, validators=[validate_how_many_everyday_activities])
     subdivision = models.ForeignKey(Subdivision, on_delete=models.SET_NULL, null=True, blank=True,
                                     verbose_name='pododdział')

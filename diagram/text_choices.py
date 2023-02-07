@@ -28,8 +28,8 @@ ACTIVITY_NAMES = (
     ('SŁ.DYŻ', 'służba dyżurnego'),
     ('SŁ.PST', 'służba PST'),
     ('SŁ.PKT', 'służba PKT'),
-    ('PA GAR', 'służba PA garnizonu'),
-    ('PA JW', 'służba PA JW'),
+    ('PA GAR', 'pododdział alarmowy garnizonu'),
+    ('PA JW', 'pododdział alarmowy JW'),
     ('PO SŁ.', 'po służbie'),
     ('DYŻUR', 'dyżur'),
     ('OKO', 'OKO'),
@@ -42,7 +42,7 @@ ACTIVITY_NAMES = (
     ('WOLNE', 'wolne'),
     ('POLIG', 'poligon'),
     ('KURS', 'kurs'),
-    ('L4', 'zwolnienie lekarskie'),
+    ('L4', 'L4 - zwolnienie lekarskie'),
     ('INNE', 'inne'),
     ('HDK', 'HDK'),
 )
@@ -80,8 +80,8 @@ EVERYDAY_ACTIVITY_NAMES = (
     ('SŁ.DYŻ', 'służba dyżurnego'),
     ('SŁ.PST', 'służba PST'),
     ('SŁ.PKT', 'służba PKT'),
-    ('PA GAR', 'służba PA garnizonu'),
-    ('PA JW', 'służba PA JW'),
+    ('PA GAR', 'pododdział alarmowy garnizonu'),
+    ('PA JW', 'pododdział alarmowy JW'),
     ('OKO', 'OKO'),
 )
 

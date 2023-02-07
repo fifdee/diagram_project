@@ -10,10 +10,8 @@ from diagram.text_choices import ACTIVITY_NAMES, DEFAULT_COLOR
 from colorfield.fields import ColorField
 
 
-# Create your models here.
 class ActivityColor(models.Model):
     activity_name = models.CharField(max_length=30, verbose_name='aktywność')
-    # color_hex = models.CharField(max_length=7, verbose_name='kolor')
     color_hex = ColorField(default='#FF0000', verbose_name='kolor')
     subdivision = models.ForeignKey(Subdivision, on_delete=models.SET_NULL, null=True, blank=True,
                                     verbose_name='pododdział')

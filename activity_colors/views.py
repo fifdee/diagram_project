@@ -15,7 +15,7 @@ class ActivityColorsUpdate(LoginRequiredMixin, View):
         forms = [{'instance': ActivityColorModelForm(instance=x), 'name': x.activity_name} for x in colors]
 
         context = {
-            'forms': forms
+            'forms': sorted(forms, key=lambda x: x['name'])
         }
         return render(request, template_name='diagram/activity_color_update.html', context=context)
 
