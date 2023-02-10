@@ -6,16 +6,16 @@
         <form method="get">
             <h5><select name="days_before" style="border: none; text-align: center;"
                         onchange="this.form.submit()">
-                <option {% if request.GET.days_before == '90' %}selected{% endif %} value="90">
-                    Aktywności z ostatnich 90 dni do dzisiaj włącznie
-                </option>
-                <option {% if request.GET.days_before == '30' %}selected{% endif %} value="30">
+                <option {% if request.session.days_before == 30 %}selected{% endif %} value="30">
                     Aktywności z ostatnich 30 dni do dzisiaj włącznie
                 </option>
-                <option {% if request.GET.days_before == '180' %}selected{% endif %} value="180">
+                <option {% if request.session.days_before == 90 %}selected{% endif %} value="90">
+                    Aktywności z ostatnich 90 dni do dzisiaj włącznie
+                </option>
+                <option {% if request.session.days_before == 180 %}selected{% endif %} value="180">
                     Aktywności z ostatnich 180 dni do dzisiaj włącznie
                 </option>
-                <option {% if request.GET.days_before == 'all' %}selected{% endif %} value="all">
+                <option {% if request.session.days_before == 9999 %}selected{% endif %} value="all">
                     Wszystkie aktywności do dzisiaj włącznie
                 </option>
             </select></h5>
@@ -25,13 +25,62 @@
             <thead>
             <tr class="d-flex justify-content-center">
                 <th class="col col-md-1 px-0" scope="col">#</th>
-                <th class="col col-md-2 px-0" scope="col">nazwisko, imię, stopień</th>
-                <th class="col col-md-1 px-0" scope="col">L4</th>
-                <th class="col col-md-1 px-0" scope="col">Dyżury</th>
-                <th class="col col-md-1 px-0" scope="col">Służby</th>
-                <th class="col col-md-1 px-0" scope="col">HDK</th>
-                <th class="col col-md-1 px-0" scope="col">Urlopy i wolne</th>
-                <th class="col col-md-1 px-0" scope="col">Kursy</th>
+                <th class="col col-md-2 px-0" scope="col">
+                    <form method="get">
+                        <input name="order_key" hidden value="last_name">
+                        <button class="btn p-0"><b>{% if request.session.order_key == 'last_name' %}<u>{% endif %}
+                            Nazwisko, imię, stopień
+                            {% if request.session.order_key == 'last_name' %}</u>{% endif %}</b></button>
+                    </form>
+                </th>
+                <th class="col col-md-1 px-0" scope="col">
+                    <form method="get">
+                        <input name="order_key" hidden value="L4">
+                        <button class="btn p-0"><b>{% if request.session.order_key == 'L4' %}<u>{% endif %}
+                            L4
+                        {% if request.session.order_key == 'last_name' %}</u>{% endif %}</b></button>
+                    </form>
+                </th>
+                <th class="col col-md-1 px-0" scope="col">
+                    <form method="get">
+                        <input name="order_key" hidden value="Dyżury">
+                        <button class="btn p-0"><b>{% if request.session.order_key == 'Dyżury' %}<u>{% endif %}
+                            Dyżury
+                        {% if request.session.order_key == 'Dyżury' %}</u>{% endif %}</b></button>
+                    </form>
+                </th>
+                <th class="col col-md-1 px-0" scope="col">
+                    <form method="get">
+                        <input name="order_key" hidden value="Służby">
+                        <button class="btn p-0"><b>{% if request.session.order_key == 'Służby' %}<u>{% endif %}
+                            Służby
+                        {% if request.session.order_key == 'Służby' %}</u>{% endif %}</b></button>
+                    </form>
+                </th>
+                <th class="col col-md-1 px-0" scope="col">
+                    <form method="get">
+                        <input name="order_key" hidden value="HDK">
+                        <button class="btn p-0"><b>{% if request.session.order_key == 'HDK' %}<u>{% endif %}
+                            HDK
+                        {% if request.session.order_key == 'HDK' %}</u>{% endif %}</b></button>
+                    </form>
+                </th>
+                <th class="col col-md-1 px-0" scope="col">
+                    <form method="get">
+                        <input name="order_key" hidden value="Urlopy">
+                        <button class="btn p-0"><b>{% if request.session.order_key == 'Urlopy' %}<u>{% endif %}
+                            Urlopy i wolne
+                        {% if request.session.order_key == 'Urlopy' %}</u>{% endif %}</b></button>
+                    </form>
+                </th>
+                <th class="col col-md-1 px-0" scope="col">
+                    <form method="get">
+                        <input name="order_key" hidden value="Kursy">
+                        <button class="btn p-0"><b>{% if request.session.order_key == 'Kursy' %}<u>{% endif %}
+                            Kursy
+                        {% if request.session.order_key == 'Kursy' %}</u>{% endif %}</b></button>
+                    </form>
+                </th>
             </tr>
             </thead>
             <tbody>

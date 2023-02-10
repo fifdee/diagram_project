@@ -9,21 +9,21 @@ from diagram.models import Soldier
 
 class StatisticsView(generic.View):
     def get(self, request):
-        days_before = 90
-        try:
-            days_before = self.request.GET['days_before']
-            if days_before == 'all':
-                days_before = 9999
+        days_before_param = request.GET.get('days_before', None)
+        if days_before_param and days_before_param in ['30', '90', '180', 'all']:
+            if days_before_param == 'all':
+                days_before_param = 9999
             else:
-                days_before = int(days_before)
-        except MultiValueDictKeyError:
-            ...
-        except ValueError:
-            messages.add_message(self.request, messages.WARNING, f'Nieprawidłowa wartość parametru: {days_before}')
-            return redirect('statistics')
+                days_before_param = int(days_before_param)
+            request.session['days_before'] = days_before_param
+        days_before = request.session.get('days_before', 90)
 
-        context = {
-            'statistics': [{
+        order_key_param = request.GET.get('order_key', None)
+        if order_key_param and order_key_param in ['last_name', 'L4', 'Dyżury', 'Służby', 'HDK', 'Urlopy', 'Kursy']:
+            request.session['order_key'] = order_key_param
+        order_key = request.session.get('order_key', 'last_name')
+
+        content = [{
                 'pk': soldier.pk,
                 'rank': soldier.rank,
                 'first_name': soldier.first_name,
@@ -38,7 +38,8 @@ class StatisticsView(generic.View):
                                                        ['UR.WYP', 'WOLNE', 'UR.DOD', 'UR.OK', 'UR.WYC', 'UR.SZK'],
                                                        days_before),
                 'Kursy': get_days_of_soldier_activity(soldier, ['KURS'], days_before),
-            } for soldier in Soldier.objects.filter(subdivision=request.user.subdivision).order_by('last_name')]
-        }
+            } for soldier in Soldier.objects.filter(subdivision=request.user.subdivision).order_by('last_name')
+        ]
 
-        return render(request, 'soldiers_statistics/statistics.html', context=context)
+
+        return render(request, 'soldiers_statistics/statistics.html', context={'statistics': sorted(content, key=lambda x:x[order_key])})
