@@ -1,45 +1,43 @@
-import datetime
-
-from django.shortcuts import render
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.utils.datastructures import MultiValueDictKeyError
 from django.views import generic
-from django.db.models import Q
+
+from diagram.functions import get_days_of_soldier_activity
 from diagram.models import Soldier
 
 
 class StatisticsView(generic.View):
     def get(self, request):
+        days_before = 90
+        try:
+            days_before = self.request.GET['days_before']
+            if days_before == 'all':
+                days_before = 9999
+            else:
+                days_before = int(days_before)
+        except MultiValueDictKeyError:
+            ...
+        except ValueError:
+            messages.add_message(self.request, messages.WARNING, f'Nieprawidłowa wartość parametru: {days_before}')
+            return redirect('statistics')
+
         context = {
             'statistics': [{
                 'pk': soldier.pk,
                 'rank': soldier.rank,
                 'first_name': soldier.first_name,
                 'last_name': soldier.last_name,
-                'L4': sum([(act.end_date - act.start_date).days + 1 for act in soldier.activity_set.filter(
-                    subdivision=request.user.subdivision, name='L4')]),
-                'Dyżury': sum([(act.end_date - act.start_date).days + 1 for act in soldier.activity_set.filter(
-                    subdivision=request.user.subdivision, name='DYŻUR')]),
-                'Służby': sum([(act.end_date - act.start_date).days + 1 for act in soldier.activity_set.filter(
-                    Q(subdivision=request.user.subdivision, name='SŁ.OF') |
-                    Q(subdivision=request.user.subdivision, name='SŁ.POM') |
-                    Q(subdivision=request.user.subdivision, name='SŁ.PDF') |
-                    Q(subdivision=request.user.subdivision, name='SŁ.PST') |
-                    Q(subdivision=request.user.subdivision, name='SŁ.PKT') |
-                    Q(subdivision=request.user.subdivision, name='PA GAR') |
-                    Q(subdivision=request.user.subdivision, name='PA JW') |
-                    Q(subdivision=request.user.subdivision, name='OKO')
-                )]),
-                'HDK': sum([(act.end_date - act.start_date).days + 1 for act in soldier.activity_set.filter(
-                    subdivision=request.user.subdivision, name='HDK')]),
-                'Urlopy': sum([(act.end_date - act.start_date).days + 1 for act in soldier.activity_set.filter(
-                    Q(subdivision=request.user.subdivision, name='UR.WYP') |
-                    Q(subdivision=request.user.subdivision, name='WOLNE') |
-                    Q(subdivision=request.user.subdivision, name='UR.DOD') |
-                    Q(subdivision=request.user.subdivision, name='UR.OK') |
-                    Q(subdivision=request.user.subdivision, name='UR.WYC') |
-                    Q(subdivision=request.user.subdivision, name='UR.SZK')
-                )]),
-                'Kursy': sum([(act.end_date - act.start_date).days + 1 for act in soldier.activity_set.filter(
-                    subdivision=request.user.subdivision, name='KURS')]),
+                'L4': get_days_of_soldier_activity(soldier, ['L4'], days_before),
+                'Dyżury': get_days_of_soldier_activity(soldier, ['DYŻUR'], days_before),
+                'Służby': get_days_of_soldier_activity(soldier,
+                                                       ['SŁ.OF', 'SŁ.POM', 'SŁ.PDF', 'SŁ.PST', 'SŁ.PKT', 'PA GAR',
+                                                        'PA JW', 'OKO'], days_before),
+                'HDK': get_days_of_soldier_activity(soldier, ['HDK'], days_before),
+                'Urlopy': get_days_of_soldier_activity(soldier,
+                                                       ['UR.WYP', 'WOLNE', 'UR.DOD', 'UR.OK', 'UR.WYC', 'UR.SZK'],
+                                                       days_before),
+                'Kursy': get_days_of_soldier_activity(soldier, ['KURS'], days_before),
             } for soldier in Soldier.objects.filter(subdivision=request.user.subdivision).order_by('last_name')]
         }
 

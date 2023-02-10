@@ -1,4 +1,7 @@
+import datetime
+
 from django.core.exceptions import ValidationError
+from django.utils.timezone import now
 
 
 def validate_how_many_everyday_activities(value):
@@ -6,6 +9,7 @@ def validate_how_many_everyday_activities(value):
     if value < 1 or value > 50:
         print('raising')
         raise ValidationError('Podaj wartość od 1 do 50.')
+
 
 def everyday_activity_conflicts(activity, everyday_activity_class):
     for current_activity in everyday_activity_class.objects.filter(subdivision=activity.subdivision):
@@ -39,6 +43,24 @@ def activity_conflicts(activity, activity_class):
                         'start_date': iterated_activity.start_date, 'end_date': iterated_activity.end_date}
             print('-------------------------------------')
     return None
+
+
+def get_days_of_soldier_activity(soldier, activities_names, days_before):
+    start_date = now().date() + datetime.timedelta(days=-days_before)
+    end_date = now().date()
+    days = 0
+    for act in soldier.activity_set.filter(subdivision=soldier.subdivision, name__in=activities_names,
+                                           start_date__lte=end_date, end_date__gte=start_date):
+        measured_start_date = start_date
+        if act.start_date > measured_start_date:
+            measured_start_date = act.start_date
+
+        measured_end_date = end_date
+        if measured_end_date > act.end_date:
+            measured_end_date = act.end_date
+
+        days += (measured_end_date - measured_start_date).days + 1
+    return days
 
 
 def get_soldier_activities(activity_age, soldier):
@@ -166,7 +188,6 @@ def everyday_activities_as_string(everyday_activities, this_day_activities):
                     act_to_assign['count'] -= 1
                 else:
                     activities_to_assign.remove(act_to_assign)
-
 
     output_string = ''
     i = 1
