@@ -36,18 +36,18 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
 
         default_start_day = -1  # yesterday
         start_day = default_start_day
-        default_days_count = 12  # TODO load saved setting from settings model
-        days_count = default_days_count
+
         try:
-            days_count = int(self.request.GET['days_count'])
             start_day = int(self.request.GET['start_day'])
         except MultiValueDictKeyError:
-            print('using default days_count and/or start_day value')
+            print('using default start_day value')
         except ValueError:
-            print('invalid value for days_count and/or start_day parameter')
+            print('invalid value for start_day parameter')
 
-        if days_count > 20:
-            days_count = 20
+        days_count_param = request.GET.get('days_count', None)
+        if days_count_param and int(days_count_param) in range(4, 21):
+            request.session['days_count'] = int(days_count_param)
+        days_count = request.session.get('days_count', 12)
 
         unassigned_activities = Activity.objects.filter(subdivision=request.user.subdivision, soldier=None)
         everyday_activities = EverydayActivity.objects.filter(subdivision=request.user.subdivision)
@@ -102,7 +102,6 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
             'activities': activities,
             'today': today,
             'range': range(4, 21),
-            'default_days_count': default_days_count,
             'default_start_day': default_start_day,
             'dates': sorted(dates, key=lambda x: x[0]),
             'holidays': these_holidays,

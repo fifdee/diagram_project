@@ -24,8 +24,8 @@
             <h5><select name="days_count" style="border: none; text-align: center;"
                         onchange="this.form.submit()">
                 {% for i in range %}
-                    <option {% if request.GET.days_count == i|stringformat:"i" %}selected{% elif not request.GET.days_count and default_days_count == i %}selected{% endif %}
-                            value="{{ i }}">
+                    <option {% if request.session.days_count == i %}selected{% endif %}
+                            value={{ i }}>
                         Ilość wyświetlanych dni: {{ i }}
                     </option>
                 {% endfor %}
