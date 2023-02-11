@@ -21,7 +21,7 @@ from diagram.models import Soldier, Activity, SoldierInfo, EverydayActivity
 from diagram.text_choices import ACTIVITY_NAMES, SOLDIER_INFO_NAME_CHANGE_PREFIX
 from diagram.functions import activity_conflicts, get_soldier_activities, get_url_params, merge_neighbour_activities, \
     update_soldier_info_names, unassigned_activities_as_string, everyday_activity_conflicts, \
-    everyday_activities_as_string
+    everyday_activities_as_string, get_activities_count_for_day, reordered_activities_count
 
 
 class ShowDiagram(LoginRequiredMixin, generic.View):
@@ -45,8 +45,11 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
             print('invalid value for start_day parameter')
 
         days_count_param = request.GET.get('days_count', None)
-        if days_count_param and int(days_count_param) in range(4, 21):
-            request.session['days_count'] = int(days_count_param)
+        try:
+            if days_count_param and int(days_count_param) in range(4, 21):
+                request.session['days_count'] = int(days_count_param)
+        except ValueError:
+            ...
         days_count = request.session.get('days_count', 12)
 
         unassigned_activities = Activity.objects.filter(subdivision=request.user.subdivision, soldier=None)
@@ -98,8 +101,15 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
                                          f'Konflikt aktywności dla żołnierza: {soldier}')
         print(dates)
 
+        activities_count = get_activities_count_for_day(subdivision=request.user.subdivision, day=today)
+        activities_count['Do zajęć'] = soldiers.count() - sum(activities_count.values())
+        activities_count['Ewidencyjnie'] = soldiers.count()
+        activities_count['Obecni'] = activities_count['Do zajęć'] + activities_count['Służby'] + activities_count['Po służbie']
+        activities_count = reordered_activities_count(activities_count)
+
         context = {
             'activities': activities,
+            'activities_count': activities_count,
             'today': today,
             'range': range(4, 21),
             'default_start_day': default_start_day,

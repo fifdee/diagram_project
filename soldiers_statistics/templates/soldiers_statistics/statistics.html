@@ -1,5 +1,6 @@
 {% extends 'account/base.html' %}
 {% load crispy_forms_filters %}
+{% load static %}
 
 {% block content %}
     <div class="d-flex flex-column align-items-center">
@@ -38,7 +39,7 @@
                         <input name="order_key" hidden value="L4">
                         <button class="btn p-0"><b>{% if request.session.order_key == 'L4' %}<u>{% endif %}
                             L4
-                        {% if request.session.order_key == 'last_name' %}</u>{% endif %}</b></button>
+                            {% if request.session.order_key == 'last_name' %}</u>{% endif %}</b></button>
                     </form>
                 </th>
                 <th class="col col-md-1 px-0" scope="col">
@@ -46,15 +47,16 @@
                         <input name="order_key" hidden value="Dyżury">
                         <button class="btn p-0"><b>{% if request.session.order_key == 'Dyżury' %}<u>{% endif %}
                             Dyżury
-                        {% if request.session.order_key == 'Dyżury' %}</u>{% endif %}</b></button>
+                            {% if request.session.order_key == 'Dyżury' %}</u>{% endif %}</b></button>
                     </form>
                 </th>
                 <th class="col col-md-1 px-0" scope="col">
                     <form method="get">
                         <input name="order_key" hidden value="Służby">
                         <button class="btn p-0"><b>{% if request.session.order_key == 'Służby' %}<u>{% endif %}
-                            Służby
-                        {% if request.session.order_key == 'Służby' %}</u>{% endif %}</b></button>
+                            Służby <a data-bs-toggle="tooltip" data-bs-title="Uwzględnia również OKO">
+                        <img src="{% static 'icons/info.svg' %}" height="20px"/></a>
+                            {% if request.session.order_key == 'Służby' %}</u>{% endif %}</b></button>
                     </form>
                 </th>
                 <th class="col col-md-1 px-0" scope="col">
@@ -62,7 +64,7 @@
                         <input name="order_key" hidden value="HDK">
                         <button class="btn p-0"><b>{% if request.session.order_key == 'HDK' %}<u>{% endif %}
                             HDK
-                        {% if request.session.order_key == 'HDK' %}</u>{% endif %}</b></button>
+                            {% if request.session.order_key == 'HDK' %}</u>{% endif %}</b></button>
                     </form>
                 </th>
                 <th class="col col-md-1 px-0" scope="col">
@@ -70,7 +72,7 @@
                         <input name="order_key" hidden value="Urlopy">
                         <button class="btn p-0"><b>{% if request.session.order_key == 'Urlopy' %}<u>{% endif %}
                             Urlopy i wolne
-                        {% if request.session.order_key == 'Urlopy' %}</u>{% endif %}</b></button>
+                            {% if request.session.order_key == 'Urlopy' %}</u>{% endif %}</b></button>
                     </form>
                 </th>
                 <th class="col col-md-1 px-0" scope="col">
@@ -78,7 +80,23 @@
                         <input name="order_key" hidden value="Kursy">
                         <button class="btn p-0"><b>{% if request.session.order_key == 'Kursy' %}<u>{% endif %}
                             Kursy
-                        {% if request.session.order_key == 'Kursy' %}</u>{% endif %}</b></button>
+                            {% if request.session.order_key == 'Kursy' %}</u>{% endif %}</b></button>
+                    </form>
+                </th>
+                <th class="col col-md-1 px-0" scope="col">
+                    <form method="get">
+                        <input name="order_key" hidden value="PS">
+                        <button class="btn p-0"><b>{% if request.session.order_key == 'PS' %}<u>{% endif %}
+                            Inne PS
+                            {% if request.session.order_key == 'PS' %}</u>{% endif %}</b></button>
+                    </form>
+                </th>
+                <th class="col col-md-1 px-0" scope="col">
+                    <form method="get">
+                        <input name="order_key" hidden value="Poligony">
+                        <button class="btn p-0"><b>{% if request.session.order_key == 'Poligony' %}<u>{% endif %}
+                            Poligony
+                            {% if request.session.order_key == 'Poligony' %}</u>{% endif %}</b></button>
                     </form>
                 </th>
             </tr>
@@ -96,6 +114,8 @@
                     <td class="col col-md-1 px-0">{{ soldier.HDK }}</td>
                     <td class="col col-md-1 px-0">{{ soldier.Urlopy }}</td>
                     <td class="col col-md-1 px-0">{{ soldier.Kursy }}</td>
+                    <td class="col col-md-1 px-0">{{ soldier.PS }}</td>
+                    <td class="col col-md-1 px-0">{{ soldier.Poligony }}</td>
                 </tr>
             {% endfor %}
             </tbody>

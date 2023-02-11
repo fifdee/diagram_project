@@ -3,6 +3,37 @@
 {% load static %}
 
 {% block content %}
+    <table class="table table-bordered">
+        <thead>
+        <tr class="">Dzisiejsze rozliczenie stanów osobowych {{ today }}</tr>
+        <tr class="grid">
+            {% for key in activities_count.keys %}
+                <th class="col col-1" scope="col" style="text-align: center;">
+                    {{ key }}
+                    {% if key == 'Obecni' %}<a data-bs-toggle="tooltip" data-bs-title="Wszyscy niezaangażowani + osoby na służbach i po służbach">
+                        <img src="{% static 'icons/info.svg' %}" height="20px"/></a>{% endif %}
+                    {% if key == 'Do zajęć' %}<a data-bs-toggle="tooltip" data-bs-title="Wszyscy niezaangażowani">
+                        <img src="{% static 'icons/info.svg' %}" height="20px"/></a>{% endif %}
+                    {% if key == 'Służby' %}<a data-bs-toggle="tooltip" data-bs-title="Uwzględnia również OKO">
+                        <img src="{% static 'icons/info.svg' %}" height="20px"/></a>{% endif %}
+                    {% if key == 'Urlopy' %}<a data-bs-toggle="tooltip" data-bs-title="Urlopy, wolne całodniowe, HDK">
+                        <img src="{% static 'icons/info.svg' %}" height="20px"/></a>{% endif %}
+                    {% if key == 'PS' %}<a data-bs-toggle="tooltip" data-bs-title="W tym zestawieniu uwzględnia również dyżury">
+                        <img src="{% static 'icons/info.svg' %}" height="20px"/></a>{% endif %}
+                </th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="grid">
+            {% for val in activities_count.values %}
+                <td class="col col-1" style="text-align: center;">
+                    {{ val }}
+                </td>
+            {% endfor %}
+        </tr>
+        </tbody>
+    </table>
 
     <div class="">
         <form method="get" class="d-flex justify-content-evenly">
@@ -58,10 +89,12 @@
                             {% if day.0 == today %}background-color: wheat;{% endif %}
                             {% if day.0.weekday == 6 or day.1 %}color: crimson{% endif %}">
                     {{ day.0|date:"d M" }}<br>{% if day.1 %}<a data-bs-toggle="tooltip"
-                                                               data-bs-title="{{ day.1 }}"><img src="{% static 'icons/info.svg' %}" height="20px">
-                </a>{% endif %}{{ day.0|date:"D" }}{% if day.2 %} <a href="{% url 'activity-unassigned-and-everyday-list' %}" data-bs-toggle="tooltip"
-                                                               data-bs-title="{{ day.2 }}"><img src="{% static 'icons/excl.svg' %}" height="20px">
-                </a>{% endif %}
+                                                               data-bs-title="{{ day.1 }}"><img
+                        src="{% static 'icons/info.svg' %}" height="20px">
+                </a>{% endif %}{{ day.0|date:"D" }}{% if day.2 %}
+                    <a href="{% url 'activity-unassigned-and-everyday-list' %}" data-bs-toggle="tooltip"
+                       data-bs-title="{{ day.2 }}"><img src="{% static 'icons/excl.svg' %}" height="20px">
+                    </a>{% endif %}
                 </th>
             {% endfor %}
         </tr>

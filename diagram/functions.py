@@ -45,6 +45,45 @@ def activity_conflicts(activity, activity_class):
     return None
 
 
+def reordered_activities_count(activities_count):
+    activities_count_new = {
+        'Ewidencyjnie': activities_count['Ewidencyjnie'],
+        'Obecni': activities_count['Obecni'],
+        'Do zajęć': activities_count['Do zajęć'],
+        'Służby': activities_count['Służby'],
+        'Po służbie': activities_count['Po służbie'],
+        'Urlopy': activities_count['Urlopy'],
+        'L4': activities_count['L4'],
+        'PS': activities_count['PS'],
+        'Kursy': activities_count['Kursy'],
+        'Poligon': activities_count['Poligon'],
+    }
+    return activities_count_new
+
+def get_activities_count_for_day(day, subdivision):
+    from diagram.models import Activity
+    activities = {
+        'Służby': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+                                                          end_date__gte=day, name__in=[
+                'SŁ.OF', 'SŁ.POM', 'SŁ.PDF', 'SŁ.DYŻ', 'SŁ.PST', 'SŁ.PKT', 'PA GAR', 'PA JW', 'OKO']).count(),
+        'Po służbie': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+                                                              end_date__gte=day, name__in=['PO SŁ.']).count(),
+        'Urlopy': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+                                                          end_date__gte=day, name__in= [
+                'UR.WYP', 'WOLNE', 'UR.DOD', 'UR.OJC', 'UR.OK', 'UR.WYC', 'UR.SZK', 'HDK']).count(),
+        'L4': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+                                                              end_date__gte=day, name__in=['L4']).count(),
+        'PS': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+                                                      end_date__gte=day, name__in=['DYŻUR', 'PS']).count(),
+        'Kursy': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+                                                      end_date__gte=day, name__in=['KURS']).count(),
+        'Poligon': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+                                                         end_date__gte=day, name__in=['POLIG']).count(),
+    }
+
+    return activities
+
+
 def get_days_of_soldier_activity(soldier, activities_names, days_before):
     start_date = now().date() + datetime.timedelta(days=-days_before)
     end_date = now().date()
