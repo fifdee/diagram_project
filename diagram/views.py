@@ -40,7 +40,7 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
         try:
             start_day = int(self.request.GET['start_day'])
         except MultiValueDictKeyError:
-            print('using default start_day value')
+            ...
         except ValueError:
             print('invalid value for start_day parameter')
 
@@ -51,6 +51,7 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
         except ValueError:
             ...
         days_count = request.session.get('days_count', 12)
+        request.session['days_count'] = days_count
 
         unassigned_activities = Activity.objects.filter(subdivision=request.user.subdivision, soldier=None)
         everyday_activities = EverydayActivity.objects.filter(subdivision=request.user.subdivision)
@@ -87,7 +88,7 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
                     activities[soldier][j]['description'] = activity.description
 
                     try:
-                        activities[soldier][j]['color'] = ActivityColor.objects.get(
+                        activities[soldier][j]['color'] = ActivityColor.objects.get(subdivision=request.user.subdivision,
                             activity_name=activity.get_name_display()).color_hex
                     except ActivityColor.DoesNotExist:
                         messages.add_message(self.request, messages.WARNING,
@@ -99,7 +100,6 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
                 except Activity.MultipleObjectsReturned:
                     messages.add_message(self.request, messages.WARNING,
                                          f'Konflikt aktywności dla żołnierza: {soldier}')
-        print(dates)
 
         activities_count = get_activities_count_for_day(subdivision=request.user.subdivision, day=today)
         activities_count['Do zajęć'] = soldiers.count() - sum(activities_count.values())
@@ -126,16 +126,10 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
         activity_name = request.POST['activity_new']
         day = datetime.datetime.strptime(request.POST['date'], '%d.%m.%Y').date()
 
-        print(soldier)
-        print(activity_name)
-        print(day)
-
         activity_previous_pk = request.POST['activity_previous_pk']
         if activity_previous_pk != '':
             # MODIFYING OR SPLITTING PREVIOUS ACTIVITY
             previous_activity = Activity.objects.get(pk=activity_previous_pk)
-            print(f'previous_activity.start_date: {previous_activity.start_date}')
-            print(f'previous_activity.end_date: {previous_activity.end_date}')
 
             if previous_activity.start_date == day and previous_activity.end_date == day:
                 previous_activity.delete()
@@ -190,9 +184,8 @@ class SoldierDetail(LoginRequiredMixin, generic.DetailView):
         try:
             activity_age = self.request.GET['activity_age']
         except MultiValueDictKeyError:
-            print('"start" parameter in URL not found - using "current" as default')
+            ...
 
-        print(activity_age)
         context = super(SoldierDetail, self).get_context_data(**kwargs)
 
         context['activities'] = get_soldier_activities(activity_age, soldier=self.get_object())

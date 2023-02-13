@@ -17,7 +17,7 @@ class ActivityColor(models.Model):
                                     verbose_name='pododdział')
 
     def __str__(self):
-        return f'{self.activity_name}; {self.color_hex}'
+        return f'{self.activity_name}; {self.color_hex}; {self.subdivision}'
 
     def clean(self):
         super(ActivityColor, self).clean()
@@ -26,10 +26,13 @@ class ActivityColor(models.Model):
         if not r:
             raise ValidationError({'color_hex': 'Provide correct hex color value.'})
 
+
 def set_default_colors(sender, instance, created, **kwargs):
-    if created:
-        for activity_name in ACTIVITY_NAMES:
-            if activity_name[0] != '':
+    print('launched set_default_colors')
+    for activity_name in ACTIVITY_NAMES:
+        if activity_name[0] != '' and instance is not None:
+            if ActivityColor.objects.filter(activity_name=activity_name[1],
+                                            subdivision=instance.subdivision).count() == 0:
                 ActivityColor.objects.create(activity_name=activity_name[1], color_hex=DEFAULT_COLOR[activity_name[0]],
                                              subdivision=instance.subdivision)
 

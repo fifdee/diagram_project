@@ -20,7 +20,8 @@ class ActivityColorsUpdate(LoginRequiredMixin, View):
         return render(request, template_name='diagram/activity_color_update.html', context=context)
 
     def post(self, request, *args, **kwargs):
-        instance = get_object_or_404(ActivityColor, activity_name=request.POST['activity_name'])
+        instance = get_object_or_404(ActivityColor, activity_name=request.POST['activity_name'],
+                                     subdivision=request.user.subdivision)
         print(request.POST)
         instance.color_hex = request.POST['color_hex']
         instance.save()
