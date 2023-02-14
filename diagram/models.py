@@ -14,9 +14,13 @@ class User(AbstractUser):
 
 class Subdivision(models.Model):
     name = models.CharField(max_length=30, verbose_name='nazwa')
+    demo = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.name
+        if len(self.name) < 35:
+            return self.name
+        else:
+            return self.name[:30] + '[...]'
 
 
 class Soldier(models.Model):
@@ -25,6 +29,7 @@ class Soldier(models.Model):
     last_name = models.CharField(max_length=30, verbose_name='nazwisko')
     subdivision = models.ForeignKey(Subdivision, on_delete=models.SET_NULL, null=True, blank=True,
                                     verbose_name='pododdział')
+    demo = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.rank} {self.first_name} {self.last_name} ({self.subdivision})'
@@ -34,16 +39,19 @@ class SoldierInfo(models.Model):
     soldier = models.ForeignKey(Soldier, on_delete=models.CASCADE, verbose_name='żołnierz')
     name = models.CharField(max_length=20, verbose_name='nazwa')
     value = models.CharField(max_length=30, default='')
+    demo = models.BooleanField(default=False)
 
 
 class Activity(models.Model):
     soldier = models.ForeignKey(Soldier, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='żołnierz')
-    name = models.CharField(max_length=30, choices=sorted(ACTIVITY_NAMES, key=lambda x: x[1].lower()), verbose_name='nazwa')
+    name = models.CharField(max_length=30, choices=sorted(ACTIVITY_NAMES, key=lambda x: x[1].lower()),
+                            verbose_name='nazwa')
     description = models.CharField(max_length=200, default='', blank=True, verbose_name='opis')
     start_date = models.DateField(verbose_name='data rozpoczęcia')
     end_date = models.DateField(verbose_name='data zakończenia', blank=True)
     subdivision = models.ForeignKey(Subdivision, on_delete=models.SET_NULL, null=True, blank=True,
                                     verbose_name='pododdział')
+    demo = models.BooleanField(default=False)
 
     def clean(self):
         super(Activity, self).clean()
@@ -66,11 +74,14 @@ class Activity(models.Model):
     def __str__(self):
         return f'{self.name} {self.description} ({self.soldier})'
 
+
 class EverydayActivity(models.Model):
     name = models.CharField(max_length=30, choices=EVERYDAY_ACTIVITY_NAMES, verbose_name='nazwa')
-    how_many = models.IntegerField(verbose_name='ile dziennie', default=1, validators=[validate_how_many_everyday_activities])
+    how_many = models.IntegerField(verbose_name='ile dziennie', default=1,
+                                   validators=[validate_how_many_everyday_activities])
     subdivision = models.ForeignKey(Subdivision, on_delete=models.SET_NULL, null=True, blank=True,
                                     verbose_name='pododdział')
+    demo = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

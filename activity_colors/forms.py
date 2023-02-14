@@ -8,7 +8,7 @@ from activity_colors.models import ActivityColor
 class ActivityColorModelForm(ModelForm):
     class Meta:
         model = ActivityColor
-        exclude = ['subdivision', 'activity_name']
+        exclude = ['subdivision', 'activity_name', 'demo']
 
     def __init__(self, *args, **kwargs):
         super(ActivityColorModelForm, self).__init__(*args, **kwargs)

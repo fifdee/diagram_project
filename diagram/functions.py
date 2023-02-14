@@ -3,7 +3,6 @@ import datetime
 from django.core.exceptions import ValidationError
 from django.utils.timezone import now
 
-
 def validate_how_many_everyday_activities(value):
     print(f'value: {value}')
     if value < 1 or value > 50:
@@ -63,21 +62,21 @@ def reordered_activities_count(activities_count):
 def get_activities_count_for_day(day, subdivision):
     from diagram.models import Activity
     activities = {
-        'Służby': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+        'Służby': Activity.objects.filter(subdivision=subdivision, start_date__lte=day, soldier__isnull=False,
                                                           end_date__gte=day, name__in=[
                 'SŁ.OF', 'SŁ.POM', 'SŁ.PDF', 'SŁ.DYŻ', 'SŁ.PST', 'SŁ.PKT', 'PA GAR', 'PA JW', 'OKO']).count(),
-        'Po służbie': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+        'Po służbie': Activity.objects.filter(subdivision=subdivision, start_date__lte=day, soldier__isnull=False,
                                                               end_date__gte=day, name__in=['PO SŁ.']).count(),
-        'Urlopy': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+        'Urlopy': Activity.objects.filter(subdivision=subdivision, start_date__lte=day, soldier__isnull=False,
                                                           end_date__gte=day, name__in= [
                 'UR.WYP', 'WOLNE', 'UR.DOD', 'UR.OJC', 'UR.OK', 'UR.WYC', 'UR.SZK', 'HDK']).count(),
-        'L4': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+        'L4': Activity.objects.filter(subdivision=subdivision, start_date__lte=day, soldier__isnull=False,
                                                               end_date__gte=day, name__in=['L4']).count(),
-        'PS': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+        'PS': Activity.objects.filter(subdivision=subdivision, start_date__lte=day, soldier__isnull=False,
                                                       end_date__gte=day, name__in=['DYŻUR', 'PS']).count(),
-        'Kursy': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+        'Kursy': Activity.objects.filter(subdivision=subdivision, start_date__lte=day, soldier__isnull=False,
                                                       end_date__gte=day, name__in=['KURS']).count(),
-        'Poligon': Activity.objects.filter(subdivision=subdivision, start_date__lte=day,
+        'Poligon': Activity.objects.filter(subdivision=subdivision, start_date__lte=day, soldier__isnull=False,
                                                          end_date__gte=day, name__in=['POLIG']).count(),
     }
 

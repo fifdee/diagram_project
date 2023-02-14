@@ -1,3 +1,5 @@
+{% load guest_user %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,6 +22,14 @@
 {% include 'navbar.html' %}
 
 {% include 'messages.html' %}
+
+{% if user|is_guest_user %}
+    <div class="d-flex flex-column align-items-center">
+        <div class="alert alert-warning show" role="alert">
+            Konto demonstracyjne do sprawdzenia funkcjonalności aplikacji
+        </div>
+    </div>
+{% endif %}
 
 {% block content %}
 

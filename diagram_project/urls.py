@@ -23,4 +23,5 @@ urlpatterns = [
     path('', include('diagram.urls')),
     path('activity-colors/', include('activity_colors.urls')),
     path('soldiers-statistics/', include('soldiers_statistics.urls')),
+    path("convert/", include("guest_user.urls")),
 ]

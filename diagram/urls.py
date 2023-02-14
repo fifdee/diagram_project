@@ -4,10 +4,12 @@ from diagram.views import ShowDiagram, SoldierList, SoldierUpdate, SoldierDetail
     ActivityUpdateSoldierBound, ActivityDelete, ActivityCreateSoldierBound, SoldierInfoUpdate, SoldierInfoNamesUpdate, \
     SoldierInfoAdd, \
     SoldierInfoDelete, ActivityUnassignedAndEverydayList, ActivityCreate, ActivityUpdate, EverydayActivityCreate, \
-    EverydayActivityUpdate, EverydayActivityDelete
+    EverydayActivityUpdate, EverydayActivityDelete, DemoAccountCreate, DeleteDemoDataFromDeletedGuests
 
 urlpatterns = [
     path('', ShowDiagram.as_view(), name='show-diagram'),
+    path('demo-account/', DemoAccountCreate.as_view(), name='demo-account'),
+    path('demo-delete/', DeleteDemoDataFromDeletedGuests.as_view(), name='demo-delete'),
     path('soldier-list/', SoldierList.as_view(), name='soldier-list'),
     path('soldier-detail/<int:pk>/', SoldierDetail.as_view(), name='soldier-detail'),
     path('soldier-update/<int:pk>/', SoldierUpdate.as_view(), name='soldier-update'),

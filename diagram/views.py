@@ -13,16 +13,38 @@ from django.utils.timezone import now
 from django.views import generic
 import datetime
 import holidays
+from guest_user.mixins import AllowGuestUserMixin
+from uuid import uuid4
 
 from activity_colors.models import ActivityColor
+from diagram.demo_account import create_demo_data, delete_demo_data_from_deleted_guests
 from diagram.forms import SoldierForm, ActivityFormSoldierDisabled, SoldierInfoUpdateForm, SoldierInfoNamesUpdateForm, \
     SoldierInfoAddForm, ActivityForm, EverydayActivityForm
-from diagram.models import Soldier, Activity, SoldierInfo, EverydayActivity
+from diagram.models import Soldier, Activity, SoldierInfo, EverydayActivity, Subdivision
 from diagram.text_choices import ACTIVITY_NAMES, SOLDIER_INFO_NAME_CHANGE_PREFIX
 from diagram.functions import activity_conflicts, get_soldier_activities, get_url_params, merge_neighbour_activities, \
     update_soldier_info_names, unassigned_activities_as_string, everyday_activity_conflicts, \
     everyday_activities_as_string, get_activities_count_for_day, reordered_activities_count
 
+
+class DemoAccountCreate(AllowGuestUserMixin, generic.View):
+    def get(self, request):
+        user = request.user
+        uid = str(uuid4())
+        new_subdivision = Subdivision.objects.create(name='Przykładowy pododdział ' + uid, demo=True)
+        user.subdivision = new_subdivision
+        user.save()
+
+        create_demo_data(new_subdivision)
+
+        return redirect('show-diagram')
+
+
+class DeleteDemoDataFromDeletedGuests(generic.View):
+    def get(self, request):
+        if request.user.is_superuser:
+            delete_demo_data_from_deleted_guests()
+        return redirect('show-diagram')
 
 class ShowDiagram(LoginRequiredMixin, generic.View):
     def get(self, request):
@@ -150,7 +172,8 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
                     description=previous_activity.description,
                     start_date=day + datetime.timedelta(days=1),
                     end_date=end_date,
-                    subdivision=request.user.subdivision
+                    subdivision=request.user.subdivision,
+                    demo=request.user.subdivision.demo
                 )
 
         if activity_name != '':
@@ -159,7 +182,8 @@ class ShowDiagram(LoginRequiredMixin, generic.View):
                 name=activity_name,
                 start_date=day,
                 end_date=day,
-                subdivision=request.user.subdivision
+                subdivision=request.user.subdivision,
+                demo=request.user.subdivision.demo
             )
 
         url_params = get_url_params(request.POST['days_count'], request.POST['start_day'])
@@ -225,6 +249,7 @@ class SoldierCreate(LoginRequiredMixin, generic.CreateView):
     def form_valid(self, form):
         new_soldier = form.save(commit=False)
         new_soldier.subdivision = self.request.user.subdivision
+        new_soldier.demo = self.request.user.subdivision.demo
         new_soldier.save()
 
         messages.add_message(self.request, messages.SUCCESS, 'Dodano żołnierza.')
@@ -265,6 +290,7 @@ class ActivityCreateSoldierBound(LoginRequiredMixin, generic.CreateView):
     def form_valid(self, form):
         activity = form.save(commit=False)
         activity.subdivision = self.request.user.subdivision
+        activity.demo = self.request.user.subdivision.demo
         activity.save()
         messages.add_message(self.request, messages.SUCCESS, f'Dodano aktywność: {activity}')
 
@@ -277,6 +303,7 @@ class ActivityCreate(LoginRequiredMixin, generic.CreateView):
 
     def get_form(self, form_class=None):
         form = super(ActivityCreate, self).get_form(form_class=ActivityForm)
+        form.fields['soldier'].queryset = Soldier.objects.filter(subdivision=self.request.user.subdivision)
         form.fields['start_date'].widget = forms.widgets.DateInput(attrs={'type': 'date'})
         form.fields['end_date'].widget = forms.widgets.DateInput(attrs={'type': 'date'})
         return form
@@ -284,6 +311,7 @@ class ActivityCreate(LoginRequiredMixin, generic.CreateView):
     def form_valid(self, form):
         activity = form.save(commit=False)
         activity.subdivision = self.request.user.subdivision
+        activity.demo = self.request.user.subdivision.demo
         activity.save()
         messages.add_message(self.request, messages.SUCCESS, f'Dodano aktywność: {activity}')
 
@@ -298,6 +326,7 @@ class EverydayActivityCreate(LoginRequiredMixin, generic.CreateView):
     def form_valid(self, form):
         everyday_activity = form.save(commit=False)
         everyday_activity.subdivision = self.request.user.subdivision
+        everyday_activity.demo = self.request.user.subdivision.demo
         conflicts = everyday_activity_conflicts(everyday_activity, EverydayActivity)
         if conflicts:
             form.add_error('name', 'Już istnieje codzienna aktywność tego typu.')
@@ -332,6 +361,11 @@ class ActivityUpdateSoldierBound(LoginRequiredMixin, generic.UpdateView):
 class ActivityUpdate(LoginRequiredMixin, generic.UpdateView):
     template_name = 'diagram/activity_update.html'
     form_class = ActivityForm
+
+    def get_form(self, form_class=None):
+        form = super(ActivityUpdate, self).get_form(form_class=ActivityForm)
+        form.fields['soldier'].queryset = Soldier.objects.filter(subdivision=self.request.user.subdivision)
+        return form
 
     def form_valid(self, form):
         activity = form.save()

@@ -8,7 +8,7 @@ from diagram.text_choices import SOLDIER_INFO_NAME_CHANGE_PREFIX
 class SoldierForm(ModelForm):
     class Meta:
         model = Soldier
-        exclude = ['subdivision']
+        exclude = ['subdivision', 'demo']
 
 
 class SoldierInfoUpdateForm(forms.Form):
@@ -41,7 +41,7 @@ class SoldierInfoAddForm(forms.ModelForm):
 class ActivityFormSoldierDisabled(ModelForm):
     class Meta:
         model = Activity
-        exclude = ['subdivision']
+        exclude = ['subdivision', 'demo']
 
     def __init__(self, *args, **kwargs):
         super(ActivityFormSoldierDisabled, self).__init__(*args, **kwargs)
@@ -51,10 +51,10 @@ class ActivityFormSoldierDisabled(ModelForm):
 class ActivityForm(ModelForm):
     class Meta:
         model = Activity
-        exclude = ['subdivision']
+        exclude = ['subdivision', 'demo']
 
 
 class EverydayActivityForm(ModelForm):
     class Meta:
         model = EverydayActivity
-        exclude = ['subdivision']
+        exclude = ['subdivision', 'demo']

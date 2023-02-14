@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
+    'guest_user.backends.GuestBackend',
 ]
 
 INSTALLED_APPS = [
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
 
     'django_browser_reload',
     'colorfield',
+    'guest_user',
 ]
 
 SITE_ID = 1
