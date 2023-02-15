@@ -46,148 +46,152 @@ class DeleteDemoDataForExpiredGuests(generic.View):
             delete_demo_data_for_expired_guests()
         return redirect('show-diagram')
 
-class ShowDiagram(LoginRequiredMixin, generic.View):
+class ShowDiagram(generic.View):
     def get(self, request):
-        t_1 = time.time()
+        if request.user.is_authenticated:
+            t_1 = time.time()
 
-        today = now().date()
-        these_holidays = holidays.Poland(years=[today.year - 1, today.year, today.year + 1])
-        soldiers = Soldier.objects.filter(subdivision=request.user.subdivision).order_by('last_name')
-        activities = {}
-        dates = []
+            today = now().date()
+            these_holidays = holidays.Poland(years=[today.year - 1, today.year, today.year + 1])
+            soldiers = Soldier.objects.filter(subdivision=request.user.subdivision).order_by('last_name')
+            activities = {}
+            dates = []
 
-        default_start_day = -1  # yesterday
-        start_day = default_start_day
+            default_start_day = -1  # yesterday
+            start_day = default_start_day
 
-        try:
-            start_day = int(self.request.GET['start_day'])
-        except MultiValueDictKeyError:
-            ...
-        except ValueError:
-            print('invalid value for start_day parameter')
+            try:
+                start_day = int(self.request.GET['start_day'])
+            except MultiValueDictKeyError:
+                ...
+            except ValueError:
+                print('invalid value for start_day parameter')
 
-        days_count_param = request.GET.get('days_count', None)
-        try:
-            if days_count_param and int(days_count_param) in range(4, 21):
-                request.session['days_count'] = int(days_count_param)
-        except ValueError:
-            ...
-        days_count = request.session.get('days_count', 12)
-        request.session['days_count'] = days_count
+            days_count_param = request.GET.get('days_count', None)
+            try:
+                if days_count_param and int(days_count_param) in range(4, 21):
+                    request.session['days_count'] = int(days_count_param)
+            except ValueError:
+                ...
+            days_count = request.session.get('days_count', 12)
+            request.session['days_count'] = days_count
 
-        unassigned_activities = Activity.objects.filter(subdivision=request.user.subdivision, soldier=None)
-        everyday_activities = EverydayActivity.objects.filter(subdivision=request.user.subdivision)
+            unassigned_activities = Activity.objects.filter(subdivision=request.user.subdivision, soldier=None)
+            everyday_activities = EverydayActivity.objects.filter(subdivision=request.user.subdivision)
 
-        for soldier in soldiers:
-            activities[soldier] = {}
-            for j in range(start_day, days_count + start_day):
-                this_date = today + datetime.timedelta(days=j)
+            for soldier in soldiers:
+                activities[soldier] = {}
+                for j in range(start_day, days_count + start_day):
+                    this_date = today + datetime.timedelta(days=j)
 
-                this_day_activities = Activity.objects.filter(subdivision=request.user.subdivision,
-                                                              start_date__lte=this_date,
-                                                              end_date__gte=this_date)
+                    this_day_activities = Activity.objects.filter(subdivision=request.user.subdivision,
+                                                                  start_date__lte=this_date,
+                                                                  end_date__gte=this_date)
 
-                this_date_with_info = (this_date, these_holidays.get(this_date),
-                                       unassigned_activities_as_string(
-                                           unassigned_activities.filter(subdivision=request.user.subdivision,
-                                                                        start_date__lte=this_date,
-                                                                        end_date__gte=this_date))
-                                       + everyday_activities_as_string(everyday_activities, this_day_activities)
-                                       )
-                if this_date not in [x[0] for x in dates]:
-                    dates.append(this_date_with_info)
+                    this_date_with_info = (this_date, these_holidays.get(this_date),
+                                           unassigned_activities_as_string(
+                                               unassigned_activities.filter(subdivision=request.user.subdivision,
+                                                                            start_date__lte=this_date,
+                                                                            end_date__gte=this_date))
+                                           + everyday_activities_as_string(everyday_activities, this_day_activities)
+                                           )
+                    if this_date not in [x[0] for x in dates]:
+                        dates.append(this_date_with_info)
 
-                activities[soldier][j] = {}
-                activities[soldier][j]['name'] = ''
-                activities[soldier][j]['date'] = this_date.strftime('%d.%m.%Y')
-                activities[soldier][j]['soldier_pk'] = soldier.pk
-
-                try:
-                    activity = Activity.objects.get(soldier=soldier, start_date__lte=this_date,
-                                                    end_date__gte=this_date)
-                    activities[soldier][j]['name'] = activity
-                    activities[soldier][j]['pk'] = activity.pk
-                    activities[soldier][j]['description'] = activity.description
+                    activities[soldier][j] = {}
+                    activities[soldier][j]['name'] = ''
+                    activities[soldier][j]['date'] = this_date.strftime('%d.%m.%Y')
+                    activities[soldier][j]['soldier_pk'] = soldier.pk
 
                     try:
-                        activities[soldier][j]['color'] = ActivityColor.objects.get(subdivision=request.user.subdivision,
-                            activity_name=activity.get_name_display()).color_hex
-                    except ActivityColor.DoesNotExist:
+                        activity = Activity.objects.get(soldier=soldier, start_date__lte=this_date,
+                                                        end_date__gte=this_date)
+                        activities[soldier][j]['name'] = activity
+                        activities[soldier][j]['pk'] = activity.pk
+                        activities[soldier][j]['description'] = activity.description
+
+                        try:
+                            activities[soldier][j]['color'] = ActivityColor.objects.get(subdivision=request.user.subdivision,
+                                activity_name=activity.get_name_display()).color_hex
+                        except ActivityColor.DoesNotExist:
+                            messages.add_message(self.request, messages.WARNING,
+                                                 f'Nie udało się pobrać danych koloru dla aktywności:'
+                                                 f' {activity.get_name_display()}')
+
+                    except Activity.DoesNotExist:
+                        pass
+                    except Activity.MultipleObjectsReturned:
                         messages.add_message(self.request, messages.WARNING,
-                                             f'Nie udało się pobrać danych koloru dla aktywności:'
-                                             f' {activity.get_name_display()}')
+                                             f'Konflikt aktywności dla żołnierza: {soldier}')
 
-                except Activity.DoesNotExist:
-                    pass
-                except Activity.MultipleObjectsReturned:
-                    messages.add_message(self.request, messages.WARNING,
-                                         f'Konflikt aktywności dla żołnierza: {soldier}')
+            activities_count = get_activities_count_for_day(subdivision=request.user.subdivision, day=today)
+            activities_count['Do zajęć'] = soldiers.count() - sum(activities_count.values())
+            activities_count['Ewidencyjnie'] = soldiers.count()
+            activities_count['Obecni'] = activities_count['Do zajęć'] + activities_count['Służby'] + activities_count['Po służbie']
+            activities_count = reordered_activities_count(activities_count)
 
-        activities_count = get_activities_count_for_day(subdivision=request.user.subdivision, day=today)
-        activities_count['Do zajęć'] = soldiers.count() - sum(activities_count.values())
-        activities_count['Ewidencyjnie'] = soldiers.count()
-        activities_count['Obecni'] = activities_count['Do zajęć'] + activities_count['Służby'] + activities_count['Po służbie']
-        activities_count = reordered_activities_count(activities_count)
+            context = {
+                'activities': activities,
+                'activities_count': activities_count,
+                'today': today,
+                'range': range(4, 21),
+                'default_start_day': default_start_day,
+                'dates': sorted(dates, key=lambda x: x[0]),
+                'holidays': these_holidays,
+                'choices': sorted([a[0] for a in ACTIVITY_NAMES]),
+            }
 
-        context = {
-            'activities': activities,
-            'activities_count': activities_count,
-            'today': today,
-            'range': range(4, 21),
-            'default_start_day': default_start_day,
-            'dates': sorted(dates, key=lambda x: x[0]),
-            'holidays': these_holidays,
-            'choices': sorted([a[0] for a in ACTIVITY_NAMES]),
-        }
-
-        # print(f'time to compute diagram view: {time.time() - t_1} sec.')
-        return render(request, template_name='diagram/show_diagram.html', context=context)
+            # print(f'time to compute diagram view: {time.time() - t_1} sec.')
+            return render(request, template_name='diagram/show_diagram.html', context=context)
+        else:
+            return render(request, template_name='diagram/homepage.html')
 
     def post(self, request):
-        soldier = Soldier.objects.get(pk=request.POST['soldier_pk'])
-        activity_name = request.POST['activity_new']
-        day = datetime.datetime.strptime(request.POST['date'], '%d.%m.%Y').date()
+        if request.user.is_authenticated:
+            soldier = Soldier.objects.get(pk=request.POST['soldier_pk'])
+            activity_name = request.POST['activity_new']
+            day = datetime.datetime.strptime(request.POST['date'], '%d.%m.%Y').date()
 
-        activity_previous_pk = request.POST['activity_previous_pk']
-        if activity_previous_pk != '':
-            # MODIFYING OR SPLITTING PREVIOUS ACTIVITY
-            previous_activity = Activity.objects.get(pk=activity_previous_pk)
+            activity_previous_pk = request.POST['activity_previous_pk']
+            if activity_previous_pk != '':
+                # MODIFYING OR SPLITTING PREVIOUS ACTIVITY
+                previous_activity = Activity.objects.get(pk=activity_previous_pk)
 
-            if previous_activity.start_date == day and previous_activity.end_date == day:
-                previous_activity.delete()
-            elif previous_activity.start_date < day and previous_activity.end_date == day:
-                previous_activity.end_date = previous_activity.end_date + datetime.timedelta(days=-1)
-                previous_activity.save()
-            elif previous_activity.start_date == day and previous_activity.end_date > day:
-                previous_activity.start_date = previous_activity.start_date + datetime.timedelta(days=1)
-                previous_activity.save()
-            else:
-                end_date = previous_activity.end_date
-                previous_activity.end_date = day + datetime.timedelta(days=-1)
-                previous_activity.save()
+                if previous_activity.start_date == day and previous_activity.end_date == day:
+                    previous_activity.delete()
+                elif previous_activity.start_date < day and previous_activity.end_date == day:
+                    previous_activity.end_date = previous_activity.end_date + datetime.timedelta(days=-1)
+                    previous_activity.save()
+                elif previous_activity.start_date == day and previous_activity.end_date > day:
+                    previous_activity.start_date = previous_activity.start_date + datetime.timedelta(days=1)
+                    previous_activity.save()
+                else:
+                    end_date = previous_activity.end_date
+                    previous_activity.end_date = day + datetime.timedelta(days=-1)
+                    previous_activity.save()
 
+                    Activity.objects.create(
+                        soldier=previous_activity.soldier,
+                        name=previous_activity.name,
+                        description=previous_activity.description,
+                        start_date=day + datetime.timedelta(days=1),
+                        end_date=end_date,
+                        subdivision=request.user.subdivision,
+                        demo=request.user.subdivision.demo
+                    )
+
+            if activity_name != '':
                 Activity.objects.create(
-                    soldier=previous_activity.soldier,
-                    name=previous_activity.name,
-                    description=previous_activity.description,
-                    start_date=day + datetime.timedelta(days=1),
-                    end_date=end_date,
+                    soldier=soldier,
+                    name=activity_name,
+                    start_date=day,
+                    end_date=day,
                     subdivision=request.user.subdivision,
                     demo=request.user.subdivision.demo
                 )
 
-        if activity_name != '':
-            Activity.objects.create(
-                soldier=soldier,
-                name=activity_name,
-                start_date=day,
-                end_date=day,
-                subdivision=request.user.subdivision,
-                demo=request.user.subdivision.demo
-            )
-
-        url_params = get_url_params(request.POST['days_count'], request.POST['start_day'])
-        return redirect(f"{reverse_lazy('show-diagram')}{url_params}")
+            url_params = get_url_params(request.POST['days_count'], request.POST['start_day'])
+            return redirect(f"{reverse_lazy('show-diagram')}{url_params}")
 
 
 class SoldierList(LoginRequiredMixin, generic.ListView):

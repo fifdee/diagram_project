@@ -3,14 +3,15 @@
 {% load static %}
 
 {% block content %}
+    <div class="p-2">Dzisiejsze rozliczenie stanów osobowych {{ today }}</div>
     <table class="table table-bordered">
         <thead>
-        <tr class="">Dzisiejsze rozliczenie stanów osobowych {{ today }}</tr>
         <tr class="grid">
             {% for key in activities_count.keys %}
                 <th class="col col-1" scope="col" style="text-align: center;">
                     {{ key }}
-                    {% if key == 'Obecni' %}<a data-bs-toggle="tooltip" data-bs-title="Wszyscy niezaangażowani + osoby na służbach i po służbach">
+                    {% if key == 'Obecni' %}<a data-bs-toggle="tooltip"
+                                               data-bs-title="Wszyscy niezaangażowani + osoby na służbach i po służbach">
                         <img src="{% static 'icons/info.svg' %}" height="20px"/></a>{% endif %}
                     {% if key == 'Do zajęć' %}<a data-bs-toggle="tooltip" data-bs-title="Wszyscy niezaangażowani">
                         <img src="{% static 'icons/info.svg' %}" height="20px"/></a>{% endif %}
@@ -18,8 +19,9 @@
                         <img src="{% static 'icons/info.svg' %}" height="20px"/></a>{% endif %}
                     {% if key == 'Urlopy' %}<a data-bs-toggle="tooltip" data-bs-title="Urlopy, wolne całodniowe, HDK">
                         <img src="{% static 'icons/info.svg' %}" height="20px"/></a>{% endif %}
-                    {% if key == 'PS' %}<a data-bs-toggle="tooltip" data-bs-title="W tym zestawieniu uwzględnia również dyżury">
-                        <img src="{% static 'icons/info.svg' %}" height="20px"/></a>{% endif %}
+                    {% if key == 'PS' %}
+                        <a data-bs-toggle="tooltip" data-bs-title="W tym zestawieniu uwzględnia również dyżury">
+                            <img src="{% static 'icons/info.svg' %}" height="20px"/></a>{% endif %}
                 </th>
             {% endfor %}
         </tr>
@@ -82,7 +84,7 @@
     <table class="table table-bordered table-sm">
         <thead>
         <tr>
-            <th scope="col">#</th>
+            <th scope="col"></th>
             {% for day in dates %}
                 <th scope="col"
                     style="text-align: center;
@@ -135,6 +137,10 @@
                     </td>
                 {% endfor %}
             </tr>
+        {% empty %}
+            <div class="p-2"><b>Nie dodałeś jeszcze żadnego żołnierza. <a style="text-decoration: none;"
+                                                                       href="{% url 'soldier-create' %}">Kliknij aby
+                dodać.</a></b></div>
         {% endfor %}
         </tbody>
     </table>

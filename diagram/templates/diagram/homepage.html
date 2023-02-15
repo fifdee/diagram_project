@@ -1,0 +1,31 @@
+{% extends 'account/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="px-4 py-2 my-2 text-center">
+        <h1 class="display-5 fw-bold">Grafik obecności</h1>
+        <img class="d-block mx-auto mb-4" src="{% static 'images/preview.png' %}" alt="" width="512">
+        <div class="col-lg-6 mx-auto">
+            <p class="lead mb-4">Dodawaj żołnierzy do swojego pododdziału, edytuj ich dane, zaznaczaj aktywności, np.
+                kto kiedy ma służbę lub podróż służbową. Miej wgląd w statystyki kto ile dni przebywał na zwolnieniach
+                lekarskich, na dyżurach itp.</p>
+
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                <a href="{% url 'account_login' %}">
+                    <button type="button" class="btn btn-primary btn-lg px-4 gap-3">Zaloguj się</button>
+                </a>
+            </div>
+
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                <p class="m-4">Lub przetestuj:</p>
+            </div>
+
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                <form method="get" action="{% url 'demo-account' %}">
+                    <button type="submit" class="btn btn-primary btn-lg px-4 gap-3" onclick="this.disabled=true; this.form.submit();">
+                        Konto demonstracyjne</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
