@@ -1,10 +1,16 @@
 from django.utils.timezone import now
 from datetime import timedelta as d
+
+from guest_user.functions import get_guest_model
+
 from diagram.models import Soldier, Activity, SoldierInfo, Subdivision, User, EverydayActivity
 from activity_colors.models import ActivityColor
 
 
-def delete_demo_data_from_deleted_guests():
+def delete_demo_data_for_expired_guests():
+    GuestModel = get_guest_model()
+    GuestModel.objects.delete_expired()
+
     sldrs = Soldier.objects.filter(demo=True)
     actvts = Activity.objects.filter(demo=True)
     evrd_actvts = EverydayActivity.objects.filter(demo=True)
@@ -22,11 +28,6 @@ def delete_demo_data_from_deleted_guests():
 
 def create_demo_data(subdivision):
     today = now()
-
-    # act_clrs = ActivityColor.objects.filter(subdivision=subdivision)
-    # for act in act_clrs:
-    #     act.demo = True
-    #     act.save()
 
     soldier = Soldier.objects.create(subdivision=subdivision, rank='st. szer. spec.', first_name='Jan',
                                      last_name='Kowalski', demo=True)

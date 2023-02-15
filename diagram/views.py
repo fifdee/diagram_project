@@ -17,7 +17,7 @@ from guest_user.mixins import AllowGuestUserMixin
 from uuid import uuid4
 
 from activity_colors.models import ActivityColor
-from diagram.demo_account import create_demo_data, delete_demo_data_from_deleted_guests
+from diagram.demo_account import create_demo_data, delete_demo_data_for_expired_guests
 from diagram.forms import SoldierForm, ActivityFormSoldierDisabled, SoldierInfoUpdateForm, SoldierInfoNamesUpdateForm, \
     SoldierInfoAddForm, ActivityForm, EverydayActivityForm
 from diagram.models import Soldier, Activity, SoldierInfo, EverydayActivity, Subdivision
@@ -40,10 +40,10 @@ class DemoAccountCreate(AllowGuestUserMixin, generic.View):
         return redirect('show-diagram')
 
 
-class DeleteDemoDataFromDeletedGuests(generic.View):
+class DeleteDemoDataForExpiredGuests(generic.View):
     def get(self, request):
         if request.user.is_superuser:
-            delete_demo_data_from_deleted_guests()
+            delete_demo_data_for_expired_guests()
         return redirect('show-diagram')
 
 class ShowDiagram(LoginRequiredMixin, generic.View):

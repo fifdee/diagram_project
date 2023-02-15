@@ -13,7 +13,7 @@ class User(AbstractUser):
 
 
 class Subdivision(models.Model):
-    name = models.CharField(max_length=30, verbose_name='nazwa')
+    name = models.CharField(max_length=30, verbose_name='nazwa', unique=True)
     demo = models.BooleanField(default=False)
 
     def __str__(self):

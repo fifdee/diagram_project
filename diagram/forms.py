@@ -4,7 +4,6 @@ from django.forms import ModelForm
 from diagram.models import Soldier, Activity, SoldierInfo, EverydayActivity
 from diagram.text_choices import SOLDIER_INFO_NAME_CHANGE_PREFIX
 
-
 class SoldierForm(ModelForm):
     class Meta:
         model = Soldier

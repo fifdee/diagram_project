@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.utils.datastructures import MultiValueDictKeyError
 from django.views import generic
@@ -7,7 +8,7 @@ from diagram.functions import get_days_of_soldier_activity
 from diagram.models import Soldier
 
 
-class StatisticsView(generic.View):
+class StatisticsView(LoginRequiredMixin, generic.View):
     def get(self, request):
         days_before_param = request.GET.get('days_before', None)
         if days_before_param and days_before_param in ['30', '90', '180', 'all']:

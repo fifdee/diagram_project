@@ -11,16 +11,16 @@
 
         <p class="small">{% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktrans %}</p>
 
-        <p>W celu założenia konta skontaktuj się z administratorem.</p>
-{#        <form class="signup form-text" id="signup_form" method="post" action="{% url 'account_signup' %}">#}
-{#            {% csrf_token %}#}
-{#            {{ form|crispy }}#}
-{#            {% if redirect_field_value %}#}
-{#                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>#}
-{#            {% endif %}#}
-{#            <button type="submit" class="btn btn-outline-primary"#}
-{#                    onclick="this.disabled=true; this.form.submit();">{% trans "Sign Up" %} &raquo;#}
-{#            </button>#}
-{#        </form>#}
+{#        <p>W celu założenia konta skontaktuj się z administratorem.</p>#}
+        <form class="signup form-text" id="signup_form" method="post" action="{% url 'account_signup' %}">
+            {% csrf_token %}
+            {{ form|crispy }}
+            {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+            {% endif %}
+            <button type="submit" class="btn btn-outline-primary"
+                    onclick="this.disabled=true; this.form.submit();">{% trans "Sign Up" %} &raquo;
+            </button>
+        </form>
     </div>
 {% endblock %}
