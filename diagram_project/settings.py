@@ -57,6 +57,7 @@ ALLOWED_HOSTS = []
 
 if not DEBUG:
     ALLOWED_HOSTS.append(env('DOMAIN_NAME'))
+    ALLOWED_HOSTS.append(env('DOMAIN_NAME_2'))
 
 CSRF_TRUSTED_ORIGINS = []
 
