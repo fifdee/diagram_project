@@ -60,6 +60,8 @@ class ShowDiagram(generic.View):
             unassigned_activities = list(Activity.objects.filter(subdivision=request.user.subdivision, soldier=None))
             everyday_activities = list(EverydayActivity.objects.filter(subdivision=request.user.subdivision))
 
+            user_subdiv = request.user.subdivision
+
             activities = {}
             dates = []
 
@@ -110,10 +112,10 @@ class ShowDiagram(generic.View):
 
                         try:
                             activities[soldier][j]['color'] = [act_col for act_col in this_subdiv_act_colors
-                                                               if act_col.subdivision == request.user.subdivision and
+                                                               if act_col.subdivision == user_subdiv and
                                                                act_col.activity_name == activity.get_name_display()][0].color_hex
 
-                        except ActivityColor.DoesNotExist:
+                        except ActivityColor.DoesNotExist or IndexError:
                             messages.add_message(self.request, messages.WARNING,
                                                  f'Nie udało się pobrać danych koloru dla aktywności:'
                                                  f' {activity.get_name_display()}')
