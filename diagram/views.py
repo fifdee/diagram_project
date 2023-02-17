@@ -53,7 +53,13 @@ class ShowDiagram(generic.View):
 
             today = now().date()
             these_holidays = holidays.Poland(years=[today.year - 1, today.year, today.year + 1])
-            soldiers = Soldier.objects.filter(subdivision=request.user.subdivision).order_by('last_name')
+
+            soldiers = list(Soldier.objects.filter(subdivision=request.user.subdivision).order_by('last_name'))
+            this_subdiv_act = list(Activity.objects.filter(subdivision=request.user.subdivision))
+            this_subdiv_act_colors = list(ActivityColor.objects.filter(subdivision=request.user.subdivision))
+            unassigned_activities = list(Activity.objects.filter(subdivision=request.user.subdivision, soldier=None))
+            everyday_activities = list(EverydayActivity.objects.filter(subdivision=request.user.subdivision))
+
             activities = {}
             dates = []
 
@@ -76,23 +82,16 @@ class ShowDiagram(generic.View):
             days_count = request.session.get('days_count', 12)
             request.session['days_count'] = days_count
 
-            unassigned_activities = Activity.objects.filter(subdivision=request.user.subdivision, soldier=None)
-            everyday_activities = EverydayActivity.objects.filter(subdivision=request.user.subdivision)
-
             for soldier in soldiers:
                 activities[soldier] = {}
                 for j in range(start_day, days_count + start_day):
                     this_date = today + datetime.timedelta(days=j)
 
-                    this_day_activities = Activity.objects.filter(subdivision=request.user.subdivision,
-                                                                  start_date__lte=this_date,
-                                                                  end_date__gte=this_date)
+                    this_day_activities = [act for act in this_subdiv_act if
+                                           act.start_date <= this_date <= act.end_date]
 
                     this_date_with_info = (this_date, these_holidays.get(this_date),
-                                           unassigned_activities_as_string(
-                                               unassigned_activities.filter(subdivision=request.user.subdivision,
-                                                                            start_date__lte=this_date,
-                                                                            end_date__gte=this_date))
+                                               unassigned_activities_as_string([act for act in unassigned_activities if act.start_date <= this_date <= act.end_date])
                                            + everyday_activities_as_string(everyday_activities, this_day_activities)
                                            )
                     if this_date not in [x[0] for x in dates]:
@@ -104,15 +103,16 @@ class ShowDiagram(generic.View):
                     activities[soldier][j]['soldier_pk'] = soldier.pk
 
                     try:
-                        activity = Activity.objects.get(soldier=soldier, start_date__lte=this_date,
-                                                        end_date__gte=this_date)
+                        activity = [act for act in this_subdiv_act if act.soldier == soldier and act.start_date <= this_date <= act.end_date][0]
                         activities[soldier][j]['name'] = activity
                         activities[soldier][j]['pk'] = activity.pk
                         activities[soldier][j]['description'] = activity.description
 
                         try:
-                            activities[soldier][j]['color'] = ActivityColor.objects.get(subdivision=request.user.subdivision,
-                                activity_name=activity.get_name_display()).color_hex
+                            activities[soldier][j]['color'] = [act_col for act_col in this_subdiv_act_colors
+                                                               if act_col.subdivision == request.user.subdivision and
+                                                               act_col.activity_name == activity.get_name_display()][0].color_hex
+
                         except ActivityColor.DoesNotExist:
                             messages.add_message(self.request, messages.WARNING,
                                                  f'Nie udało się pobrać danych koloru dla aktywności:'
@@ -120,13 +120,15 @@ class ShowDiagram(generic.View):
 
                     except Activity.DoesNotExist:
                         pass
+                    except IndexError:
+                        pass
                     except Activity.MultipleObjectsReturned:
                         messages.add_message(self.request, messages.WARNING,
                                              f'Konflikt aktywności dla żołnierza: {soldier}')
 
             activities_count = get_activities_count_for_day(subdivision=request.user.subdivision, day=today)
-            activities_count['Do zajęć'] = soldiers.count() - sum(activities_count.values())
-            activities_count['Ewidencyjnie'] = soldiers.count()
+            activities_count['Do zajęć'] = len(soldiers) - sum(activities_count.values())
+            activities_count['Ewidencyjnie'] = len(soldiers)
             activities_count['Obecni'] = activities_count['Do zajęć'] + activities_count['Służby'] + activities_count['Po służbie']
             activities_count = reordered_activities_count(activities_count)
 
@@ -141,7 +143,7 @@ class ShowDiagram(generic.View):
                 'choices': sorted([a[0] for a in ACTIVITY_NAMES]),
             }
 
-            # print(f'time to compute diagram view: {time.time() - t_1} sec.')
+            print(f'time to compute diagram view: {time.time() - t_1} sec.')
             return render(request, template_name='diagram/show_diagram.html', context=context)
         else:
             return render(request, template_name='diagram/homepage.html')

@@ -23,15 +23,15 @@ def activity_conflicts(activity, activity_class):
     subdivision = soldier.subdivision
 
     other_activities = activity_class.objects.filter(subdivision=subdivision, soldier=soldier)
-    print(other_activities)
-
-    print('-------------------------------------')
-    print(f'activity.start_date={activity.start_date}')
-    print(f'activity.end_date={activity.end_date}')
+    # print(other_activities)
+    #
+    # print('-------------------------------------')
+    # print(f'activity.start_date={activity.start_date}')
+    # print(f'activity.end_date={activity.end_date}')
     for iterated_activity in other_activities:
         if activity.pk != iterated_activity.pk:
-            print(f'iterated_activity.start_date={iterated_activity.start_date}')
-            print(f'iterated_activity.end_date={iterated_activity.end_date}')
+            # print(f'iterated_activity.start_date={iterated_activity.start_date}')
+            # print(f'iterated_activity.end_date={iterated_activity.end_date}')
             if (iterated_activity.start_date <= activity.start_date <= iterated_activity.end_date) or (
                     activity.start_date <= iterated_activity.start_date <= activity.end_date):
                 return {'which_date': 'start_date', 'name': iterated_activity.name,
@@ -40,7 +40,7 @@ def activity_conflicts(activity, activity_class):
                     activity.start_date <= iterated_activity.end_date <= activity.end_date):
                 return {'which_date': 'end_date', 'name': iterated_activity.name,
                         'start_date': iterated_activity.start_date, 'end_date': iterated_activity.end_date}
-            print('-------------------------------------')
+            # print('-------------------------------------')
     return None
 
 
@@ -150,7 +150,8 @@ def merge_neighbour_activities(new_activity):
                                              name=new_activity.name,
                                              description=new_activity.description)
     except Activity.DoesNotExist:
-        print('No "left" activity for the same soldier and same activity name.')
+        # print('No "left" activity for the same soldier and same activity name.')
+        ...
 
     try:
         right_activity = Activity.objects.get(start_date=new_activity.end_date + datetime.timedelta(days=1),
@@ -158,8 +159,8 @@ def merge_neighbour_activities(new_activity):
                                               name=new_activity.name,
                                               description=new_activity.description)
     except Activity.DoesNotExist:
-        print('No "right" activity for the same soldier nad same activity name.')
-
+        # print('No "right" activity for the same soldier nad same activity name.')
+        ...
     # MERGING THE SAME ACTIVITIES
     if left_activity and not right_activity:
         left_activity.end_date = new_activity.end_date
@@ -204,7 +205,8 @@ def update_soldier_info_names(subdivision, soldier_info_fields_names):
 def unassigned_activities_as_string(unassigned_activities):
     output_string = ''
     i = 1
-    if unassigned_activities.count() > 0:
+    # if unassigned_activities.count() > 0:
+    if len(unassigned_activities) > 0:
         output_string += 'Nieprzypisane: '
     for act in unassigned_activities:
         if act.description != '':
