@@ -3,7 +3,6 @@
 {% load static %}
 
 {% block content %}
-    <div id="diagram">
         <div class="p-2">Dzisiejsze rozliczenie stanów osobowych {{ today }}</div>
         <table class="table table-bordered">
             <thead>
@@ -112,29 +111,33 @@
                         </a>
                     </th>
                     {% for activity in days.values %}
-                        <td style="text-align: center; background-color: {{ activity.color }}"
+{#                        <td id="x{{ soldier.pk }}x{{ activity.date_for_id }}" style="text-align: center; background-color: {{ activity.color }}"#}
+{#                            {% if activity.description %}data-bs-toggle="tooltip"#}
+{#                            data-bs-title="Opis: {{ activity.description }}"{% endif %}>#}
+                        <td class="p-0" id="x{{ soldier.pk }}x{{ activity.date_for_id }}">
+                            <div class="py-1" style="text-align: center; background-color: {{ activity.color }}"
                             {% if activity.description %}data-bs-toggle="tooltip"
                             data-bs-title="Opis: {{ activity.description }}"{% endif %}>
-                            <form hx-post="{% url 'show-diagram' %}" method="POST" id="activities_form">
-                                {% csrf_token %}
+                                <form hx-post="{% url 'show-diagram' %}" method="POST" id="activities_form">
+                                    {% csrf_token %}
 
-                                <input type="hidden" name="soldier" value="{{ soldier }}"/>
-                                <input type="hidden" name="soldier_pk" value="{{ activity.soldier_pk }}"/>
-                                <input type="hidden" name="activity_previous" value="{{ activity.name }}"/>
-                                <input type="hidden" name="activity_previous_pk" value="{{ activity.pk }}"/>
-                                <input type="hidden" name="date" value="{{ activity.date }}"/>
-                                <input type="hidden" name="start_day" value="{{ request.GET.start_day }}"/>
-                                <input type="hidden" name="days_count" value="{{ request.GET.days_count }}"/>
+                                    <input type="hidden" name="soldier" value="{{ soldier }}"/>
+                                    <input type="hidden" name="soldier_pk" value="{{ activity.soldier_pk }}"/>
+                                    <input type="hidden" name="activity_previous" value="{{ activity.name }}"/>
+                                    <input type="hidden" name="activity_previous_pk" value="{{ activity.pk }}"/>
+                                    <input type="hidden" name="date" value="{{ activity.date }}"/>
+                                    <input type="hidden" name="start_day" value="{{ request.GET.start_day }}"/>
+                                    <input type="hidden" name="days_count" value="{{ request.GET.days_count }}"/>
 
-                                <select name="activity_new" style="width: min-content; border: none;
-                                background-color: {{ activity.color }}" hx-post="{% url 'show-diagram' %}" hx-target="#whole_body">
-    {#                                    onchange="this.form.submit()">#}
-                                    {% for choice in choices %}
-                                        <option {% if activity.name.name == choice %}selected{% endif %} class="small"
-                                                value="{{ choice }}">{{ choice }}</option>
-                                    {% endfor %}
-                                </select>
-                            </form>
+                                    <select name="activity_new" style="width: min-content; border: none;
+                                    background-color: {{ activity.color }}" hx-post="{% url 'show-diagram' %}" hx-target="#x{{ soldier.pk }}x{{ activity.date_for_id }}">
+                                        {% for choice in choices %}
+                                            <option {% if activity.name.name == choice %}selected{% endif %} class="small"
+                                                    value="{{ choice }}">{{ choice }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </form>
+                            </div>
                         </td>
                     {% endfor %}
                 </tr>

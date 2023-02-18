@@ -102,6 +102,7 @@ class ShowDiagram(generic.View):
                     activities[soldier][j] = {}
                     activities[soldier][j]['name'] = ''
                     activities[soldier][j]['date'] = this_date.strftime('%d.%m.%Y')
+                    activities[soldier][j]['date_for_id'] = this_date.strftime('%d%m%Y')
                     activities[soldier][j]['soldier_pk'] = soldier.pk
 
                     try:
@@ -153,6 +154,7 @@ class ShowDiagram(generic.View):
     def post(self, request):
         if request.user.is_authenticated:
             soldier = Soldier.objects.get(pk=request.POST['soldier_pk'])
+            activity = None
             activity_name = request.POST['activity_new']
             day = datetime.datetime.strptime(request.POST['date'], '%d.%m.%Y').date()
 
@@ -170,6 +172,7 @@ class ShowDiagram(generic.View):
                     previous_activity.start_date = previous_activity.start_date + datetime.timedelta(days=1)
                     previous_activity.save()
                 else:
+                    # SPLIT PREVIOUS ACTIVITY INTO TWO SURROUNDING ACTIVITIES
                     end_date = previous_activity.end_date
                     previous_activity.end_date = day + datetime.timedelta(days=-1)
                     previous_activity.save()
@@ -185,7 +188,7 @@ class ShowDiagram(generic.View):
                     )
 
             if activity_name != '':
-                Activity.objects.create(
+                activity = Activity.objects.create(
                     soldier=soldier,
                     name=activity_name,
                     start_date=day,
@@ -195,7 +198,36 @@ class ShowDiagram(generic.View):
                 )
 
             url_params = get_url_params(request.POST['days_count'], request.POST['start_day'])
-            return redirect(f"{reverse_lazy('show-diagram')}{url_params}")
+            # return redirect(f"{reverse_lazy('show-diagram')}{url_params}")
+
+            if activity:
+                activity_info = {
+                    'date_for_id': day.strftime('%d%m%Y'),
+                    'color': ActivityColor.objects.get(subdivision=soldier.subdivision, activity_name=activity.get_name_display()).color_hex,
+                    'description': activity.description,
+                    'soldier_pk': soldier.pk,
+                    'name': activity,
+                    'pk': activity.pk,
+                    'date': day.strftime('%d.%m.%Y'),
+                }
+            else:
+                activity_info = {
+                    'date_for_id': day.strftime('%d%m%Y'),
+                    'color': '#FFFFFF',
+                    'description': None,
+                    'soldier_pk': soldier.pk,
+                    'name': '',
+                    'pk': '',
+                    'date': day.strftime('%d.%m.%Y'),
+                }
+
+            context = {
+                'soldier': soldier,
+                'activity': activity_info,
+                'choices': sorted([a[0] for a in ACTIVITY_NAMES]),
+            }
+
+            return render(request, 'diagram/diagram_updated_field.html', context=context)
 
 
 class SoldierList(LoginRequiredMixin, generic.ListView):
